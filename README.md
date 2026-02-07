@@ -179,7 +179,7 @@ Make equivalent:
 make load-truncate
 ```
 
-**Important:** `.xlsx` cannot be imported directly by `psql/\copy`. Convert Excel files to CSV first (ideally one CSV per table).
+**Important:** `.xlsx` cannot be imported directly by psql's `\copy`. Convert Excel files to CSV first (one CSV per table).
 
 ---
 
