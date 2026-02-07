@@ -1,0 +1,5 @@
+-- Define all views in this file using `CREATE OR REPLACE VIEW`.
+-- This makes the script idempotent: it can be executed multiple times during development/testing
+-- without failing when views already exist, and it keeps view definitions up to date.
+-- Note: removing a view from this file does not delete it from the database; use the reset script
+-- (or explicit DROP VIEW statements) when you need to remove obsolete views.

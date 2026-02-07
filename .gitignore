@@ -1,0 +1,9 @@
+# Environment files
+.env
+.env.*
+
+# Keep example
+!.env.example
+
+# Private data
+/data/private/

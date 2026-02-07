@@ -1,0 +1,4 @@
+-- This should include:
+-- - row counts per table
+-- - orphan / integrity checks (as applicable)
+-- - duplicates on expected-unique keys
