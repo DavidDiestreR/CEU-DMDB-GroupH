@@ -26,12 +26,10 @@ CEU-DMDB-GroupH/
 ├─ .gitignore
 ├─ .env.example
 ├─ Makefile
-
 ├─ docs/
 │  ├─ week_4_project_proposal/
 │  ├─ week_8_project_prototype/
 │  └─ week_12_project_presentation/
-
 ├─ sql/
 │  ├─ 00_reset.sql
 │  ├─ 01_schema.sql
