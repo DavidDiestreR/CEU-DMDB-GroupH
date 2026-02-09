@@ -6,12 +6,12 @@ ENV_FILE := .env
 export
 
 PSQL ?= psql
-SCHEMA ?= group_h
+SCHEMA ?= sandbox
 DATA_DIR ?= data/public/v1
 STRICT ?= 1
 
 CONN = host=$(DB_HOST) port=$(DB_PORT) dbname=$(DB_NAME) user=$(DB_USER) password=$(DB_PASSWORD)
-PSQL_BASE = $(PSQL) "$(CONN)" -v ON_ERROR_STOP=1 -v schema=$(SCHEMA)
+PSQL_BASE = $(PSQL) -v ON_ERROR_STOP=1 -v schema=$(SCHEMA)
 
 help:
 	@echo "Targets:"
@@ -38,29 +38,29 @@ $(ENV_FILE): .env.example
 env: $(ENV_FILE)
 
 schema: $(ENV_FILE)
-	$(PSQL_BASE) -f sql/01_schema.sql
+	$(PSQL_BASE) -f sql/01_schema.sql "$(CONN)"
 
 constraints: $(ENV_FILE)
-	$(PSQL_BASE) -f sql/02_constraints.sql
+	$(PSQL_BASE) -f sql/02_constraints.sql "$(CONN)"
 
 views: $(ENV_FILE)
-	$(PSQL_BASE) -f sql/03_views.sql
+	$(PSQL_BASE) -f sql/03_views.sql "$(CONN)"
 
 deploy: schema constraints views
 
 load: $(ENV_FILE)
-	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -f sql/04_load_from_dir.sql
+	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -f sql/04_load_from_dir.sql "$(CONN)"
 
 load-truncate: $(ENV_FILE)
-	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -v truncate=1 -f sql/04_load_from_dir.sql
+	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -v truncate=1 -f sql/04_load_from_dir.sql "$(CONN)"
 
 reset-drop: $(ENV_FILE)
-	$(PSQL_BASE) -v mode=drop -f sql/00_reset.sql
+	$(PSQL_BASE) -v mode=drop -f sql/00_reset.sql "$(CONN)"
 
 reset-truncate: $(ENV_FILE)
-	$(PSQL_BASE) -v mode=truncate -f sql/00_reset.sql
+	$(PSQL_BASE) -v mode=truncate -f sql/00_reset.sql "$(CONN)"
 
 sanity: $(ENV_FILE)
-	$(PSQL_BASE) -f sql/queries/sanity_checks.sql
+	$(PSQL_BASE) -f sql/queries/sanity_checks.sql "$(CONN)"
 
 workflow: reset-drop deploy load sanity
