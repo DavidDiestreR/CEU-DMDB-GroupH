@@ -7,17 +7,18 @@
 --
 -- This script is intentionally "public-ready":
 --   - It does NOT drop the whole database.
---   - It only operates on a single schema (default: group_h).
+--   - It only operates on a single schema (default: sandbox).
 --
 -- Usage (recommended):
---   psql "<conn>" -v schema=group_h -v mode=drop     -f sql/00_reset.sql
---   psql "<conn>" -v schema=group_h -v mode=truncate -f sql/00_reset.sql
+--   psql -v schema=sandbox -v mode=drop     -f sql/00_reset.sql "<conn>"
+--   psql -v schema=sandbox -v mode=truncate -f sql/00_reset.sql "<conn>"
 --
 -- Modes:
 --   mode=drop     : DROP SCHEMA CASCADE + recreate the schema (removes tables, views, etc.)
 --   mode=truncate : TRUNCATE all known tables (keeps schema + objects, clears data)
 --
 -- Notes:
+--   - The schema is assumed to already exist unless you have CREATE privileges.
 --   - You may need privileges to drop/recreate a schema on the CEU server.
 --   - If you only have rights to modify data, use mode=truncate.
 -- ============================================================
@@ -25,7 +26,7 @@
 -- ---- Optional variables with defaults
 \if :{?schema}
 \else
-  \set schema group_h
+  \set schema sandbox
 \endif
 
 \if :{?mode}
