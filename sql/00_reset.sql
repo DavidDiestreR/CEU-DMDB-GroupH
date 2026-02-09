@@ -36,26 +36,44 @@
 
 \echo ''
 \echo '== Reset config =='
-\echo 'schema : :'schema''
-\echo 'mode   : :'mode''
+\echo schema : :schema
+\echo mode   : :mode
 \echo ''
 
+-- Evaluate mode in SQL (avoid psql expression parsing issues)
+SELECT (:'mode' = 'drop')::int AS is_drop,
+       (:'mode' = 'truncate')::int AS is_truncate
+\gset
+
 -- ------------------------------------------------------------
--- mode = drop  (full reset)
+-- mode = drop  (drop all project tables, keep schema)
 -- ------------------------------------------------------------
-\if :mode = 'drop'
-  \echo 'Dropping schema :'schema' (CASCADE) and recreating it...'
-  DROP SCHEMA IF EXISTS :"schema" CASCADE;
-  CREATE SCHEMA :"schema";
-  \echo 'Done. Schema recreated: :'schema''
+\if :is_drop
+  \echo Dropping all project tables in schema :schema (CASCADE)...
+  DROP TABLE IF EXISTS
+    :"schema"."PROGRAM_MANDATORY_ELECTIVE_COURSE",
+    :"schema"."PROGRAM_ELECTIVE_COURSE",
+    :"schema"."PROGRAM_REQUIRED_COURSE",
+    :"schema"."DEPARTMENT_INSTRUCTOR",
+    :"schema"."TEACHING_COURSE",
+    :"schema"."STUDENT_PASSED_COURSE",
+    :"schema"."STUDENT_ENROLLED_IN_COURSE",
+    :"schema"."STUDENT_REQUESTED_ENROLLMENT_IN_COURSE",
+    :"schema"."Student",
+    :"schema"."Course",
+    :"schema"."Program",
+    :"schema"."Instructor",
+    :"schema"."Department"
+  CASCADE;
+  \echo Done. Tables dropped in schema :schema
   \quit 0
 \endif
 
 -- ------------------------------------------------------------
 -- mode = truncate (clear data, keep schema)
 -- ------------------------------------------------------------
-\if :mode = 'truncate'
-  \echo 'Truncating tables in schema :'schema' (CASCADE)...'
+\if :is_truncate
+  \echo Truncating tables in schema :schema (CASCADE)...
 
   -- Order is not critical with CASCADE, but listing all project tables here
   -- makes the intent explicit.
@@ -76,9 +94,9 @@
   RESTART IDENTITY
   CASCADE;
 
-  \echo 'Done. Data cleared in schema :'schema''
+  \echo Done. Data cleared in schema :schema
   \quit 0
 \endif
 
-\echo 'ERROR: Unknown mode value. Use -v mode=drop or -v mode=truncate'
+\echo ERROR: Unknown mode value. Use -v mode=drop or -v mode=truncate
 \quit 1
