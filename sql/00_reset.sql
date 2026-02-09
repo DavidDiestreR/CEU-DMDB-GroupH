@@ -10,8 +10,10 @@
 --   - It only operates on a single schema (default: sandbox).
 --
 -- Usage (recommended):
---   psql -v schema=sandbox -v mode=drop     -f sql/00_reset.sql "<conn>"
---   psql -v schema=sandbox -v mode=truncate -f sql/00_reset.sql "<conn>"
+--   1) Set variables in .env:
+--      DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SCHEMA
+--   2) Run the make target:
+--      make reset-drop        # or: make reset-truncate
 --
 -- Modes:
 --   mode=drop     : DROP SCHEMA CASCADE + recreate the schema (removes tables, views, etc.)
@@ -66,7 +68,7 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
     :"schema"."Department"
   CASCADE;
   \echo Done. Tables dropped in schema :schema
-  \quit 0
+  \quit
 \endif
 
 -- ------------------------------------------------------------
@@ -95,8 +97,8 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
   CASCADE;
 
   \echo Done. Data cleared in schema :schema
-  \quit 0
+  \quit
 \endif
 
 \echo ERROR: Unknown mode value. Use -v mode=drop or -v mode=truncate
-\quit 1
+\quit

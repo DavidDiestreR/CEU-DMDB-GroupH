@@ -8,13 +8,14 @@
 -- This script is intended to be executed with psql so that
 -- the :schema variable works.
 --
--- Usage:
---   psql -v schema=sandbox -f sql/01_schema.sql "<conn>"
+-- Usage (recommended):
+--   1) Set variables in .env:
+--      DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SCHEMA
+--   2) Run the make target:
+--      make schema
 --
 -- Notes:
 --   - Run sql/00_reset.sql first (mode=drop) if you want a clean rebuild.
---   - If you plan to load real CEU codes (often alphanumeric), consider
---     switching *_id columns from INT to TEXT/VARCHAR.
 -- ============================================================
 
 \if :{?schema}
@@ -28,28 +29,28 @@ SET search_path TO :"schema";
 BEGIN;
 
 CREATE TABLE "Department" (
-  "department_id" int PRIMARY KEY
+  "department_id" serial PRIMARY KEY
 );
 
 CREATE TABLE "Program" (
-  "program_id" int PRIMARY KEY,
+  "program_id" serial PRIMARY KEY,
   "department_id" int NOT NULL
 );
 
 CREATE TABLE "Course" (
-  "course_id" int PRIMARY KEY,
+  "course_id" serial PRIMARY KEY,
   "department_id" int NOT NULL,
   "excludes_course_id" int,
   "hard_prerequisite_course_id" int
 );
 
 CREATE TABLE "Student" (
-  "student_id" int PRIMARY KEY,
+  "student_id" serial PRIMARY KEY,
   "program_id" int NOT NULL
 );
 
 CREATE TABLE "Instructor" (
-  "instructor_id" int PRIMARY KEY
+  "instructor_id" serial PRIMARY KEY
 );
 
 CREATE TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" (

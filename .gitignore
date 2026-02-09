@@ -5,5 +5,10 @@
 # Keep example
 !.env.example
 
-# Private data
-/data/private/
+# Private data (keep the folder, ignore contents)
+/data/private/*
+!/data/private/.gitkeep
+
+# Dump folder (keep the folder, ignore contents)
+/data/dump_folder/*
+!/data/dump_folder/.gitkeep
