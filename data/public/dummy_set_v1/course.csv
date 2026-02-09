@@ -1,0 +1,4 @@
+course_id,department_id,excludes_course_id,hard_prerequisite_course_id
+1000,10,,
+1001,10,,
+1002,20,1001,1000

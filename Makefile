@@ -7,8 +7,6 @@ export
 
 PSQL ?= psql
 SCHEMA ?= sandbox
-DATA_DIR ?= data/public/v1
-STRICT ?= 1
 
 CONN = host=$(DB_HOST) port=$(DB_PORT) dbname=$(DB_NAME) user=$(DB_USER) password=$(DB_PASSWORD)
 PSQL_BASE = $(PSQL) -v ON_ERROR_STOP=1 -v schema=$(SCHEMA)
@@ -29,8 +27,6 @@ help:
 	@echo ""
 	@echo "Variables:"
 	@echo "  SCHEMA=$(SCHEMA)"
-	@echo "  DATA_DIR=$(DATA_DIR)"
-	@echo "  STRICT=$(STRICT)"
 
 $(ENV_FILE): .env.example
 	cp .env.example $(ENV_FILE)
@@ -49,10 +45,10 @@ views: $(ENV_FILE)
 deploy: schema constraints views
 
 load: $(ENV_FILE)
-	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -f sql/04_load_from_dir.sql "$(CONN)"
+	$(PSQL_BASE) -f sql/04_load_from_dir.sql "$(CONN)"
 
 load-truncate: $(ENV_FILE)
-	$(PSQL_BASE) -v data_dir="$(DATA_DIR)" -v strict=$(STRICT) -v truncate=1 -f sql/04_load_from_dir.sql "$(CONN)"
+	$(PSQL_BASE) -v truncate=1 -f sql/04_load_from_dir.sql "$(CONN)"
 
 reset-drop: $(ENV_FILE)
 	$(PSQL_BASE) -v mode=drop -f sql/00_reset.sql "$(CONN)"

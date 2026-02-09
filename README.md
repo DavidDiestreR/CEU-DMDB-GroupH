@@ -41,12 +41,14 @@ CEU-DMDB-GroupH/
 │     └─ sanity_checks.sql
 └─ data/
    ├─ public/
-   └─ private/
+   ├─ private/
+   └─ dump_folder/
 ```
 
 ### Notes
-- `data/private/` is **never committed** (sensitive / raw exports).  
+- `data/private/` is **never committed** (sensitive / raw exports); its contents are ignored by git.
 - `data/public/` may be committed (small, non-sensitive CSVs / demo extracts).
+- `data/dump_folder/` is where you drop CSVs to load; its contents are ignored by git.
 
 ---
 
@@ -79,9 +81,9 @@ For the setup we need:
 
 The Makefile reads connection variables from `.env` and provides short aliases for the longer `psql` commands below. Use `make help` to get information on all available make commands.
 
-Modify the `.env` file or use inline variables on make commands when you need a different schema or data directory than the ones added in `.env`. Here we see an example of a make command with inline variables:
+Modify the `.env` file or use inline variables on make commands when you need a different schema. Example:
 ```bash
-make SCHEMA=sandbox DATA_DIR="data/public/v1" STRICT=1 load
+make SCHEMA=$SCHEMA load
 ```
 
 ### 1) Install `psql`
@@ -107,9 +109,9 @@ make env
 Run these commands from the repo root. This executes everything on the **remote database you connect to**.
 
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalents:
@@ -122,7 +124,7 @@ make deploy # does all three in order
 ```
 
 **Why the flags?**
-- `-v schema=sandbox`: deploys everything into a dedicated schema (recommended on shared/hosted databases).
+- `-v schema=$SCHEMA`: deploys everything into a dedicated schema (recommended on shared/hosted databases).
 - `-v ON_ERROR_STOP=1`: stops immediately if anything fails, preventing partial setup.
 
 **Note on permissions**
@@ -153,16 +155,15 @@ During development/testing, scripts will often be re-run. To make this safe:
 
 ## Loading data (directory-based loader)
 
-`sql/04_load_from_dir.sql` is a generic loader designed to:
-- take an input directory (`data_dir`)
-- detect which expected table CSVs exist in that directory
+`sql/04_load_from_dir.sql` is a simple loader designed to:
+- load CSVs from `data/dump_folder/`
 - load only those tables (skipping missing ones)
-- optionally fail-fast (`strict=1`) when parent tables are empty
-- print final row counts
 
-### Example (load public data set v1)
+Place your CSVs in `data/dump_folder/` before running `make load`.
+
+### Example (load from dump folder)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v data_dir="data/public/v1" -v strict=1 -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -172,7 +173,7 @@ make load
 
 ### Re-load from scratch (truncate first)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v data_dir="data/public/v1" -v strict=1 -v truncate=1 -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v truncate=1 -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -190,7 +191,7 @@ make load-truncate
 
 ### Full reset (drop schema + recreate)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -200,7 +201,7 @@ make reset-drop
 
 ### Data-only reset (truncate tables, keep schema/objects)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v mode=truncate -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=truncate -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -215,7 +216,7 @@ make reset-truncate
 After deploying schema and loading data:
 
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -228,7 +229,7 @@ make sanity
 
 1) (Optional) full reset:
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -238,9 +239,9 @@ make reset-drop
 
 2) Deploy schema + constraints + views:
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -250,7 +251,7 @@ make deploy
 
 3) Load data (optional):
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -v data_dir="data/public/v1" -v strict=1 -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -260,10 +261,12 @@ make load
 
 4) Run checks:
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=sandbox -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
 ```bash
 make sanity
 ```
+
+
