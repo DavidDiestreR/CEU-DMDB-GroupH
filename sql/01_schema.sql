@@ -22,7 +22,7 @@
   \set schema group_h
 \endif
 
-CREATE SCHEMA IF NOT EXISTS :"schema";
+-- Schema is assumed to exist (no CREATE privilege).
 SET search_path TO :"schema";
 
 BEGIN;
