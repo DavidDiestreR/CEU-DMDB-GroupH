@@ -6,7 +6,7 @@
 -- Loads any CSVs found in a given directory (skips missing files)
 --
 -- Usage:
---   psql "<conn>" -v schema=group_h -v data_dir=data/public/v1 -f sql/04_load_from_dir.sql
+--   psql -v schema=sandbox -v data_dir=data/public/v1 -f sql/04_load_from_dir.sql "<conn>"
 --
 -- Optional flags:
 --   -v truncate=1   : TRUNCATE tables in the target schema before loading
@@ -36,14 +36,14 @@
 \if :{?data_dir}
 \else
   \echo 'ERROR: data_dir is not set.'
-  \echo 'Example: psql "<conn>" -v schema=group_h -v data_dir=data/public/v1 -f sql/04_load_from_dir.sql'
+  \echo 'Example: psql -v schema=sandbox -v data_dir=data/public/v1 -f sql/04_load_from_dir.sql "<conn>"'
   \quit 1
 \endif
 
 -- ---- Optional variables with defaults
 \if :{?schema}
 \else
-  \set schema public
+  \set schema sandbox
 \endif
 
 \if :{?truncate}

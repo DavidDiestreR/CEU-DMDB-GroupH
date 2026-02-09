@@ -9,7 +9,7 @@
 -- the :schema variable works.
 --
 -- Usage:
---   psql "<conn>" -v schema=group_h -f sql/01_schema.sql
+--   psql -v schema=sandbox -f sql/01_schema.sql "<conn>"
 --
 -- Notes:
 --   - Run sql/00_reset.sql first (mode=drop) if you want a clean rebuild.
@@ -19,7 +19,7 @@
 
 \if :{?schema}
 \else
-  \set schema group_h
+  \set schema sandbox
 \endif
 
 -- Schema is assumed to exist (no CREATE privilege).
