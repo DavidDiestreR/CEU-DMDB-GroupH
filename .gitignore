@@ -12,3 +12,17 @@
 # Dump folder (keep the folder, ignore contents)
 /data/dump_folder/*
 !/data/dump_folder/.gitkeep
+
+# Jupyter autosave/checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Notebook/runtime artifacts
+.jupyter/
+.jupyterlab/
+.ipython/
+
+# Python cache/artifacts often created while running notebooks
+__pycache__/
+*.py[cod]
+*$py.class
