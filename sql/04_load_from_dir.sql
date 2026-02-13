@@ -16,6 +16,14 @@
 
 \pset pager off
 \set ON_ERROR_STOP off
+\if :{?schema}
+\else
+  \set schema sandbox
+\endif
+
+-- Schema is assumed to exist (no CREATE privilege).
+SET search_path TO :"schema";
+
 \if :{?is_windows}
 \else
   \set is_windows false
@@ -32,7 +40,7 @@
 \endif
 \if :has_department
   \echo 'Loading department...'
-  \copy public."Department" FROM 'data/dump_folder/department.csv' WITH (FORMAT csv, HEADER true)
+  \copy "Department" FROM 'data/dump_folder/department.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -42,7 +50,7 @@
 \endif
 \if :has_instructor
   \echo 'Loading instructor...'
-  \copy public."Instructor" FROM 'data/dump_folder/instructor.csv' WITH (FORMAT csv, HEADER true)
+  \copy "Instructor" FROM 'data/dump_folder/instructor.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -52,7 +60,7 @@
 \endif
 \if :has_program
   \echo 'Loading program...'
-  \copy public."Program" FROM 'data/dump_folder/program.csv' WITH (FORMAT csv, HEADER true)
+  \copy "Program" FROM 'data/dump_folder/program.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -62,7 +70,7 @@
 \endif
 \if :has_course
   \echo 'Loading course...'
-  \copy public."Course" FROM 'data/dump_folder/course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "Course" FROM 'data/dump_folder/course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -72,7 +80,7 @@
 \endif
 \if :has_student
   \echo 'Loading student...'
-  \copy public."Student" FROM 'data/dump_folder/student.csv' WITH (FORMAT csv, HEADER true)
+  \copy "Student" FROM 'data/dump_folder/student.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -82,7 +90,7 @@
 \endif
 \if :has_department_instructor
   \echo 'Loading department_instructor...'
-  \copy public."DEPARTMENT_INSTRUCTOR" FROM 'data/dump_folder/department_instructor.csv' WITH (FORMAT csv, HEADER true)
+  \copy "DEPARTMENT_INSTRUCTOR" FROM 'data/dump_folder/department_instructor.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -92,7 +100,7 @@
 \endif
 \if :has_teaching_course
   \echo 'Loading teaching_course...'
-  \copy public."TEACHING_COURSE" FROM 'data/dump_folder/teaching_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "TEACHING_COURSE" FROM 'data/dump_folder/teaching_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -102,7 +110,7 @@
 \endif
 \if :has_program_required_course
   \echo 'Loading program_required_course...'
-  \copy public."PROGRAM_REQUIRED_COURSE" FROM 'data/dump_folder/program_required_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "PROGRAM_REQUIRED_COURSE" FROM 'data/dump_folder/program_required_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -112,7 +120,7 @@
 \endif
 \if :has_program_elective_course
   \echo 'Loading program_elective_course...'
-  \copy public."PROGRAM_ELECTIVE_COURSE" FROM 'data/dump_folder/program_elective_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "PROGRAM_ELECTIVE_COURSE" FROM 'data/dump_folder/program_elective_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -122,7 +130,7 @@
 \endif
 \if :has_program_mandatory_elective_course
   \echo 'Loading program_mandatory_elective_course...'
-  \copy public."PROGRAM_MANDATORY_ELECTIVE_COURSE" FROM 'data/dump_folder/program_mandatory_elective_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "PROGRAM_MANDATORY_ELECTIVE_COURSE" FROM 'data/dump_folder/program_mandatory_elective_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -132,7 +140,7 @@
 \endif
 \if :has_student_requested_enrollment
   \echo 'Loading student_requested_enrollment_in_course...'
-  \copy public."STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" FROM 'data/dump_folder/student_requested_enrollment_in_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" FROM 'data/dump_folder/student_requested_enrollment_in_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -142,7 +150,7 @@
 \endif
 \if :has_student_enrolled
   \echo 'Loading student_enrolled_in_course...'
-  \copy public."STUDENT_ENROLLED_IN_COURSE" FROM 'data/dump_folder/student_enrolled_in_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "STUDENT_ENROLLED_IN_COURSE" FROM 'data/dump_folder/student_enrolled_in_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -152,7 +160,7 @@
 \endif
 \if :has_student_passed
   \echo 'Loading student_passed_course...'
-  \copy public."STUDENT_PASSED_COURSE" FROM 'data/dump_folder/student_passed_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy "STUDENT_PASSED_COURSE" FROM 'data/dump_folder/student_passed_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \echo
