@@ -7,6 +7,7 @@ export
 
 PSQL ?= psql
 SCHEMA ?= sandbox
+IS_WINDOWS := $(if $(filter Windows_NT,$(OS)),true,false)
 
 CONN = host=$(DB_HOST) port=$(DB_PORT) dbname=$(DB_NAME) user=$(DB_USER) password=$(DB_PASSWORD)
 PSQL_BASE = $(PSQL) -v ON_ERROR_STOP=1 -v schema=$(SCHEMA)
@@ -45,10 +46,10 @@ views: $(ENV_FILE)
 deploy: schema constraints views
 
 load: $(ENV_FILE)
-	$(PSQL_BASE) -f sql/04_load_from_dir.sql "$(CONN)"
+	$(PSQL_BASE) -v is_windows=$(IS_WINDOWS) -f sql/04_load_from_dir.sql "$(CONN)"
 
 load-truncate: $(ENV_FILE)
-	$(PSQL_BASE) -v truncate=1 -f sql/04_load_from_dir.sql "$(CONN)"
+	$(PSQL_BASE) -v truncate=1 -v is_windows=$(IS_WINDOWS) -f sql/04_load_from_dir.sql "$(CONN)"
 
 reset-drop: $(ENV_FILE)
 	$(PSQL_BASE) -v mode=drop -f sql/00_reset.sql "$(CONN)"
