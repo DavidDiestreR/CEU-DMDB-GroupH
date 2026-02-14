@@ -30,3 +30,8 @@ __pycache__/
 # Excel temporary lock files
 ~$*.xls*
 
+
+# macOS Finder metadata
+.DS_Store
+**/.DS_Store
+
