@@ -26,3 +26,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Excel temporary lock files
+~$*.xls*
+
