@@ -1,189 +1,170 @@
+
 \set ON_ERROR_STOP on
 \pset pager off
-
--- ============================================================
--- 01_schema.sql
--- Creates the Group H schema (tables + PK/FK constraints).
---
--- This script is intended to be executed with psql so that
--- the :schema variable works.
---
--- Usage (recommended):
---   1) Set variables in .env:
---      DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SCHEMA
---   2) Run the make target:
---      make schema
--- Check 
-
--- Notes:
---   - Run sql/00_reset.sql first (mode=drop) if you want a clean rebuild.
--- ============================================================
 
 \if :{?schema}
 \else
   \set schema sandbox
 \endif
 
--- Schema is assumed to exist (no CREATE privilege).
 SET search_path TO :"schema";
 
 BEGIN;
 
+
 -- Core tables
 
 CREATE TABLE "Department" (
-  department_id      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  department_name    VARCHAR(200) NOT NULL UNIQUE
+  DEPARTMENT_ID      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  DEPARTMENT_NAME    VARCHAR(200) NOT NULL UNIQUE
 );
 
 CREATE TABLE "Program" (
-  program_id                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  program_name              VARCHAR(200) NOT NULL UNIQUE,
-  department_id             INT NOT NULL REFERENCES "Department"(department_id),
-  program_coordinator_email VARCHAR(254),
-  program_learning_outcome  TEXT,
-  program_description       TEXT
+  PROGRAM_ID                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  PROGRAM_NAME              VARCHAR(200) NOT NULL UNIQUE,
+  DEPARTMENT_ID             INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID),
+  PROGRAM_COORDINATOR_EMAIL VARCHAR(254),
+  PROGRAM_LEARNING_OUTCOME  TEXT,
+  PROGRAM_DESCRIPTION       TEXT
 );
 
 CREATE TABLE "Instructor" (
-  instructor_id     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  instructor_first_name  VARCHAR(100) NOT NULL,
-  instructor_last_name   VARCHAR(100) NOT NULL,
-  instructor_email  VARCHAR(254) UNIQUE,
-  instructor_office VARCHAR(100)
+  INSTRUCTOR_ID     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  INSTRUCTOR_FIRST_NAME  VARCHAR(100) NOT NULL,
+  INSTRUCTOR_LAST_NAME   VARCHAR(100) NOT NULL,
+  INSTRUCTOR_EMAIL  VARCHAR(254) UNIQUE,
+  INSTRUCTOR_OFFICE VARCHAR(100)
 );
 
 CREATE TABLE "Student" (
-  student_id         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  student_first_name      VARCHAR(100) NOT NULL,
-  student_last_name       VARCHAR(100) NOT NULL,
-  student_email      VARCHAR(254) UNIQUE,
-  student_start_year INT NOT NULL CHECK (student_start_year >= 2020),
-  program_id         INT NOT NULL REFERENCES "Program"(program_id)
+  STUDENT_ID         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  STUDENT_FIRST_NAME VARCHAR(100) NOT NULL,
+  STUDENT_LAST_NAME  VARCHAR(100) NOT NULL,
+  STUDENT_EMAIL      VARCHAR(254) UNIQUE,
+  STUDENT_START_YEAR INT NOT NULL CHECK (STUDENT_START_YEAR >= 2020),
+  PROGRAM_ID         INT NOT NULL REFERENCES "Program"(PROGRAM_ID)
 );
 
 CREATE TABLE term (
-  term_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  term_name  VARCHAR(100) NOT NULL UNIQUE,  
-  start_date DATE NOT NULL,
-  end_date   DATE NOT NULL,
-  CHECK (end_date > start_date)
+  TERM_ID    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  TERM_NAME  VARCHAR(100) NOT NULL UNIQUE,
+  START_DATE DATE NOT NULL,
+  END_DATE   DATE NOT NULL,
+  CHECK (END_DATE > START_DATE)
 );
-
--- Course table with self-referencing FKs for excludes and hard prerequisites
 
 CREATE TABLE "Course" (
-  course_id                 INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  course_code    VARCHAR(20) NOT NULL UNIQUE,
-  course_name               VARCHAR(200) NOT NULL UNIQUE,
-  course_credits            INT NOT NULL CHECK (course_credits > 0),
-  department_id             INT NOT NULL REFERENCES "Department"(department_id),
+  COURSE_ID      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  COURSE_CODE    VARCHAR(20) NOT NULL UNIQUE,
+  COURSE_NAME    VARCHAR(200) NOT NULL UNIQUE,
+  COURSE_CREDITS INT NOT NULL CHECK (COURSE_CREDITS > 0),
+  DEPARTMENT_ID  INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID),
 
-  -- handwritten notes:
-  course_description        TEXT,
-  prereq_text               TEXT,                          
-  course_learning_outcomes  TEXT,
+  COURSE_DESCRIPTION       TEXT,
+  PREREQ_TEXT              TEXT,
+  COURSE_LEARNING_OUTCOMES TEXT,
 
-  -- diagram fields:
-  excludes_course_id        INT REFERENCES "Course"(course_id),
-  hard_prerequisite_course_id INT REFERENCES "Course"(course_id),
+  EXCLUDES_COURSE_ID           INT REFERENCES "Course"(COURSE_ID),
+  HARD_PREREQUISITE_COURSE_ID  INT REFERENCES "Course"(COURSE_ID),
 
-  -- prevent self-references
-  CHECK (excludes_course_id IS NULL OR excludes_course_id <> course_id),
-  CHECK (hard_prerequisite_course_id IS NULL OR hard_prerequisite_course_id <> course_id)
+  CHECK (EXCLUDES_COURSE_ID IS NULL OR EXCLUDES_COURSE_ID <> COURSE_ID),
+  CHECK (HARD_PREREQUISITE_COURSE_ID IS NULL OR HARD_PREREQUISITE_COURSE_ID <> COURSE_ID)
 );
 
--- Join tables 
+-- Join tables
 
 CREATE TABLE course_term (
-  course_id INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id   INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  PRIMARY KEY (course_id, term_id)
+  COURSE_ID INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID   INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  PRIMARY KEY (COURSE_ID, TERM_ID)
 );
 
-CREATE INDEX idx_course_term_term ON course_term(term_id);
+CREATE INDEX idx_course_term_term ON course_term(TERM_ID);
 
 CREATE TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" (
-  student_id INT NOT NULL REFERENCES "Student"(student_id) ON DELETE CASCADE,
-  course_id  INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id    INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  PRIMARY KEY (student_id, course_id, term_id),
-  FOREIGN KEY (course_id, term_id) REFERENCES course_term(course_id, term_id) ON DELETE RESTRICT
+  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
+  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID    INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  PRIMARY KEY (STUDENT_ID, COURSE_ID, TERM_ID),
+  FOREIGN KEY (COURSE_ID, TERM_ID)
+    REFERENCES course_term(COURSE_ID, TERM_ID) ON DELETE RESTRICT
 );
 
 CREATE TABLE "STUDENT_ENROLLED_IN_COURSE" (
-  student_id INT NOT NULL REFERENCES "Student"(student_id) ON DELETE CASCADE,
-  course_id  INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id    INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  PRIMARY KEY (student_id, course_id, term_id),
-  FOREIGN KEY (course_id, term_id) REFERENCES course_term(course_id, term_id) ON DELETE RESTRICT
+  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
+  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID    INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  PRIMARY KEY (STUDENT_ID, COURSE_ID, TERM_ID),
+  FOREIGN KEY (COURSE_ID, TERM_ID)
+    REFERENCES course_term(COURSE_ID, TERM_ID) ON DELETE RESTRICT
 );
 
 CREATE TABLE "STUDENT_PASSED_COURSE" (
-  student_id INT NOT NULL REFERENCES "Student"(student_id) ON DELETE CASCADE,
-  course_id  INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id    INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  grade      VARCHAR(5) NOT NULL,
-  PRIMARY KEY (student_id, course_id, term_id),
-  FOREIGN KEY (course_id, term_id) REFERENCES course_term(course_id, term_id) ON DELETE RESTRICT
+  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
+  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID    INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  GRADE      VARCHAR(5) NOT NULL,
+  PRIMARY KEY (STUDENT_ID, COURSE_ID, TERM_ID),
+  FOREIGN KEY (COURSE_ID, TERM_ID)
+    REFERENCES course_term(COURSE_ID, TERM_ID) ON DELETE RESTRICT
 );
 
 CREATE TABLE "TEACHING_COURSE" (
-  instructor_id INT NOT NULL REFERENCES "Instructor"(instructor_id) ON DELETE CASCADE,
-  course_id     INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id       INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  PRIMARY KEY (instructor_id, course_id, term_id),
-  FOREIGN KEY (course_id, term_id) REFERENCES course_term(course_id, term_id) ON DELETE RESTRICT
+  INSTRUCTOR_ID INT NOT NULL REFERENCES "Instructor"(INSTRUCTOR_ID) ON DELETE CASCADE,
+  COURSE_ID     INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID       INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  PRIMARY KEY (INSTRUCTOR_ID, COURSE_ID, TERM_ID),
+  FOREIGN KEY (COURSE_ID, TERM_ID)
+    REFERENCES course_term(COURSE_ID, TERM_ID) ON DELETE RESTRICT
 );
 
-
 CREATE TABLE "DEPARTMENT_INSTRUCTOR" (
-  department_id INT NOT NULL REFERENCES "Department"(department_id) ON DELETE CASCADE,
-  instructor_id INT NOT NULL REFERENCES "Instructor"(instructor_id) ON DELETE CASCADE,
-  PRIMARY KEY (department_id, instructor_id)
+  DEPARTMENT_ID INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID) ON DELETE CASCADE,
+  INSTRUCTOR_ID INT NOT NULL REFERENCES "Instructor"(INSTRUCTOR_ID) ON DELETE CASCADE,
+  PRIMARY KEY (DEPARTMENT_ID, INSTRUCTOR_ID)
 );
 
 CREATE TABLE "PROGRAM_REQUIRED_COURSE" (
-  program_id            INT NOT NULL REFERENCES "Program"(program_id) ON DELETE CASCADE,
-  course_id             INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  available_from_year_n INT NOT NULL CHECK (available_from_year_n >= 1),
-  PRIMARY KEY (program_id, course_id)
+  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
+  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
+  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
 );
 
 CREATE TABLE "PROGRAM_ELECTIVE_COURSE" (
-  program_id            INT NOT NULL REFERENCES "Program"(program_id) ON DELETE CASCADE,
-  course_id             INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  available_from_year_n INT NOT NULL CHECK (available_from_year_n >= 1),
-  PRIMARY KEY (program_id, course_id)
+  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
+  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
+  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
 );
 
 CREATE TABLE "PROGRAM_MANDATORY_ELECTIVE_COURSE" (
-  program_id            INT NOT NULL REFERENCES "Program"(program_id) ON DELETE CASCADE,
-  course_id             INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  available_from_year_n INT NOT NULL CHECK (available_from_year_n >= 1),
-  PRIMARY KEY (program_id, course_id)
-
+  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
+  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
+  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
 );
 
--- Class and Lesson 
+-- Class and Lesson
 
-CREATE TABLE class (
-  class_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  class_name VARCHAR(200) NOT NULL UNIQUE
+CREATE TABLE Class (
+  CLASS_ID   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  CLASS_NAME VARCHAR(200) NOT NULL UNIQUE
 );
 
-CREATE TABLE lesson (
-  lesson_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  course_id   INT NOT NULL REFERENCES "Course"(course_id) ON DELETE CASCADE,
-  term_id     INT NOT NULL REFERENCES term(term_id) ON DELETE CASCADE,
-  class_id    INT NOT NULL REFERENCES class(class_id) ON DELETE CASCADE,
-  lesson_type VARCHAR(50),
-  lesson_time TIMESTAMP NOT NULL,
-  FOREIGN KEY (course_id, term_id) REFERENCES course_term(course_id, term_id) ON DELETE RESTRICT
+CREATE TABLE Lesson (
+  LESSON_ID   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  COURSE_ID   INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
+  TERM_ID     INT NOT NULL REFERENCES term(TERM_ID) ON DELETE CASCADE,
+  CLASS_ID    INT NOT NULL REFERENCES class(CLASS_ID) ON DELETE CASCADE,
+  LESSON_TYPE VARCHAR(50),
+  LESSON_TIME TIMESTAMP NOT NULL,
+  FOREIGN KEY (COURSE_ID, TERM_ID)
+    REFERENCES course_term(COURSE_ID, TERM_ID) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_course_department ON "Course"(department_id);
-CREATE INDEX idx_student_program ON "Student"(program_id);
-CREATE INDEX idx_lesson_course_term ON lesson(course_id, term_id);
+CREATE INDEX idx_course_department ON "Course"(DEPARTMENT_ID);
+CREATE INDEX idx_student_program ON "Student"(PROGRAM_ID);
+CREATE INDEX idx_lesson_course_term ON lesson(COURSE_ID, TERM_ID);
 
-commit;
+COMMIT;
