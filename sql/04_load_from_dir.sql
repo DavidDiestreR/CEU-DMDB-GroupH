@@ -84,6 +84,36 @@ SET search_path TO :"schema";
 \endif
 
 \if :is_windows
+  \set has_term `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\term.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_term `sh -c "if [ -f 'data/dump_folder/term.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_term
+  \echo 'Loading term...'
+  \copy "Term" FROM 'data/dump_folder/term.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
+  \set has_class `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\class.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_class `sh -c "if [ -f 'data/dump_folder/class.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_class
+  \echo 'Loading class...'
+  \copy "Class" FROM 'data/dump_folder/class.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
+  \set has_course_term `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\course_term.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_course_term `sh -c "if [ -f 'data/dump_folder/course_term.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_course_term
+  \echo 'Loading course_term...'
+  \copy "COURSE_TERM" FROM 'data/dump_folder/course_term.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
   \set has_department_instructor `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\department_instructor.csv') { 'true' } else { 'false' }"`
 \else
   \set has_department_instructor `sh -c "if [ -f 'data/dump_folder/department_instructor.csv' ]; then echo true; else echo false; fi"`
@@ -161,6 +191,16 @@ SET search_path TO :"schema";
 \if :has_student_passed
   \echo 'Loading student_passed_course...'
   \copy "STUDENT_PASSED_COURSE" FROM 'data/dump_folder/student_passed_course.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
+  \set has_lesson `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\lesson.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_lesson `sh -c "if [ -f 'data/dump_folder/lesson.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_lesson
+  \echo 'Loading lesson...'
+  \copy "Lesson" FROM 'data/dump_folder/lesson.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \echo
