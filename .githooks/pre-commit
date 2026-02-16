@@ -1,13 +1,13 @@
 #!/bin/sh
 
 HOOK_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-STRIP_SCRIPT="$HOOK_DIR/strip_notebooks.py"
+HYGIENE_SCRIPT="$HOOK_DIR/notebook_hygiene.py"
 
 run_python_hook() {
     cmd="$1"
 
     "$cmd" -c "import json" >/dev/null 2>&1 || return 127
-    "$cmd" "$STRIP_SCRIPT"
+    "$cmd" "$HYGIENE_SCRIPT" --fix-staged
     return $?
 }
 
@@ -38,15 +38,5 @@ for py in /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3; do
     fi
 done
 
-if command -v pwsh >/dev/null 2>&1; then
-    pwsh -NoProfile -File "$HOOK_DIR/pre-commit.ps1"
-    exit $?
-fi
-
-if command -v powershell >/dev/null 2>&1; then
-    powershell -NoProfile -ExecutionPolicy Bypass -File "$HOOK_DIR/pre-commit.ps1"
-    exit $?
-fi
-
-echo "pre-commit: no supported runtime found (python/powershell)." >&2
+echo "pre-commit: python3 is required to clean staged notebooks." >&2
 exit 1

@@ -269,4 +269,18 @@ Make equivalent:
 make sanity
 ```
 
+## Notebook hygiene enforcement
+
+To enforce cleared Jupyter notebooks across macOS/Windows/Linux, this repo includes:
+
+- Workflow: `.github/workflows/notebook-hygiene.yml`
+- Checker script: `.githooks/notebook_hygiene.py --check-all`
+
+The check fails if any tracked `.ipynb` file contains:
+
+- Non-empty `outputs`
+- Non-null `execution_count`
+- `metadata.widgets`
+
+For hard enforcement, set `Notebook Hygiene / check-notebooks` as a required status check in your branch protection rule. Local hooks can be skipped, but required CI checks block merges while failing.
 
