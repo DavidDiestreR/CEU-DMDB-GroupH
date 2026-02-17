@@ -103,15 +103,7 @@ SET search_path TO :"schema";
   \copy "Class" FROM 'data/dump_folder/class.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
-\if :is_windows
-  \set has_course_term `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\course_term.csv') { 'true' } else { 'false' }"`
-\else
-  \set has_course_term `sh -c "if [ -f 'data/dump_folder/course_term.csv' ]; then echo true; else echo false; fi"`
-\endif
-\if :has_course_term
-  \echo 'Loading course_term...'
-  \copy "COURSE_TERM" FROM 'data/dump_folder/course_term.csv' WITH (FORMAT csv, HEADER true)
-\endif
+
 
 \if :is_windows
   \set has_department_instructor `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\department_instructor.csv') { 'true' } else { 'false' }"`
