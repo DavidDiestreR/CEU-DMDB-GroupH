@@ -53,23 +53,22 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
 \if :is_drop
   \echo Dropping all project tables in schema :schema (CASCADE)...
   DROP TABLE IF EXISTS
-    :"schema"."PROGRAM_MANDATORY_ELECTIVE_COURSE",
-    :"schema"."PROGRAM_ELECTIVE_COURSE",
-    :"schema"."PROGRAM_REQUIRED_COURSE",
-    :"schema"."DEPARTMENT_INSTRUCTOR",
-    :"schema"."TEACHING_COURSE",
-    :"schema"."STUDENT_PASSED_COURSE",
-    :"schema"."STUDENT_ENROLLED_IN_COURSE",
-    :"schema"."STUDENT_REQUESTED_ENROLLMENT_IN_COURSE",
-    :"schema"."Lesson",
-    :"schema"."COURSE_TERM",
-    :"schema"."Class",
-    :"schema"."Student",
-    :"schema"."Course",
-    :"schema"."Term",
-    :"schema"."Program",
-    :"schema"."Instructor",
-    :"schema"."Department"
+    :"schema".program_mandatory_elective_course,
+    :"schema".program_elective_course,
+    :"schema".program_required_course,
+    :"schema".department_instructor,
+    :"schema".teaching_course,
+    :"schema".student_passed_course,
+    :"schema".student_enrolled_in_course,
+    :"schema".student_requested_enrollment_in_course,
+    :"schema".lesson,
+    :"schema".class,
+    :"schema".student,
+    :"schema".course,
+    :"schema".term,
+    :"schema".program,
+    :"schema".instructor,
+    :"schema".department
   CASCADE;
   \echo Done. Tables dropped in schema :schema
   \quit
@@ -84,23 +83,22 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
   -- Order is not critical with CASCADE, but listing all project tables here
   -- makes the intent explicit.
   TRUNCATE TABLE
-    :"schema"."PROGRAM_MANDATORY_ELECTIVE_COURSE",
-    :"schema"."PROGRAM_ELECTIVE_COURSE",
-    :"schema"."PROGRAM_REQUIRED_COURSE",
-    :"schema"."DEPARTMENT_INSTRUCTOR",
-    :"schema"."TEACHING_COURSE",
-    :"schema"."STUDENT_PASSED_COURSE",
-    :"schema"."STUDENT_ENROLLED_IN_COURSE",
-    :"schema"."STUDENT_REQUESTED_ENROLLMENT_IN_COURSE",
-    :"schema"."Lesson",
-    :"schema"."COURSE_TERM",
-    :"schema"."Class",
-    :"schema"."Student",
-    :"schema"."Course",
-    :"schema"."Term",
-    :"schema"."Program",
-    :"schema"."Instructor",
-    :"schema"."Department"
+    :"schema".program_mandatory_elective_course,
+    :"schema".program_elective_course,
+    :"schema".program_required_course,
+    :"schema".department_instructor,
+    :"schema".teaching_course,
+    :"schema".student_passed_course,
+    :"schema".student_enrolled_in_course,
+    :"schema".student_requested_enrollment_in_course,
+    :"schema".lesson,
+    :"schema".class,
+    :"schema".student,
+    :"schema".course,
+    :"schema".term,
+    :"schema".program,
+    :"schema".instructor,
+    :"schema".department
   RESTART IDENTITY
   CASCADE;
 
