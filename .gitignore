@@ -26,3 +26,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+data/.DS_Store
+jupyter_notebooks/data_cleaning_2.ipynb
+jupyter_notebooks/data_cleaning_improved.ipynb
+jupyter_notebooks/~$cleaned_data.xlsx
