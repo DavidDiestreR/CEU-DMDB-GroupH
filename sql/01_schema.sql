@@ -6,149 +6,149 @@
   \set schema project
 \endif
 
-SET search_path TO :"schema";
+set search_path to :"schema";
 
-BEGIN;
+begin;
 
 
--- Core tables
+-- core tables
 
-CREATE TABLE "Department" (
-  DEPARTMENT_ID      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  DEPARTMENT_NAME    VARCHAR(200) NOT NULL UNIQUE
+create table department (
+  department_id      int generated always as identity primary key,
+  department_name    varchar(200) not null unique
 );
 
-CREATE TABLE "Program" (
-  PROGRAM_ID                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  PROGRAM_NAME              VARCHAR(200) NOT NULL UNIQUE,
-  DEPARTMENT_ID             INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID),
-  PROGRAM_COORDINATOR_EMAIL VARCHAR(254),
-  PROGRAM_LEARNING_OUTCOME  TEXT,
-  PROGRAM_DESCRIPTION       TEXT
+create table program (
+  program_id                int generated always as identity primary key,
+  program_name              varchar(200) not null unique,
+  department_id             int not null references "department"(department_id),
+  program_coordinator_email varchar(254),
+  program_learning_outcome  text,
+  program_description       text
 );
 
-CREATE TABLE "Instructor" (
-  INSTRUCTOR_ID     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  INSTRUCTOR_FIRST_NAME  VARCHAR(100) NOT NULL,
-  INSTRUCTOR_LAST_NAME   VARCHAR(100) NOT NULL,
-  INSTRUCTOR_EMAIL  VARCHAR(254) UNIQUE,
-  INSTRUCTOR_OFFICE VARCHAR(100)
+create table instructor (
+  instructor_id     int generated always as identity primary key,
+  instructor_first_name  varchar(100) not null,
+  instructor_last_name   varchar(100) not null,
+  instructor_email  varchar(254) unique,
+  instructor_office varchar(100)
 );
 
-CREATE TABLE "Student" (
-  STUDENT_ID         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  STUDENT_FIRST_NAME VARCHAR(100) NOT NULL,
-  STUDENT_LAST_NAME  VARCHAR(100) NOT NULL,
-  STUDENT_EMAIL      VARCHAR(254) UNIQUE,
-  STUDENT_START_YEAR INT NOT NULL CHECK (STUDENT_START_YEAR >= 2020),
-  PROGRAM_ID         INT NOT NULL REFERENCES "Program"(PROGRAM_ID)
+create table student (
+  student_id         int generated always as identity primary key,
+  student_first_name varchar(100) not null,
+  student_last_name  varchar(100) not null,
+  student_email      varchar(254) unique,
+  student_start_year int not null check (student_start_year >= 2020),
+  program_id         int not null references "program"(program_id)
 );
 
-CREATE TABLE "Term" (
-  TERM_ID    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  TERM_NAME  VARCHAR(100) NOT NULL UNIQUE,
-  START_DATE DATE NOT NULL,
-  END_DATE   DATE NOT NULL,
-  CHECK (END_DATE > START_DATE)
+create table term (
+  term_id    int generated always as identity primary key,
+  term_name  varchar(100) not null unique,
+  start_date date not null,
+  end_date   date not null,
+  check (end_date > start_date)
 );
 
-CREATE TABLE "Course" (
-  COURSE_ID      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  COURSE_CODE    VARCHAR(20) NOT NULL,
-  COURSE_NAME    VARCHAR(200) NOT NULL,
-  COURSE_CREDITS INT NOT NULL CHECK (COURSE_CREDITS > 0),
-  DEPARTMENT_ID  INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID),
-  TERM_ID        INT NOT NULL REFERENCES "Term"(TERM_ID) ON DELETE RESTRICT,
+create table course (
+  course_id      int generated always as identity primary key,
+  course_code    varchar(20) not null,
+  course_name    varchar(200) not null,
+  course_credits int not null check (course_credits > 0),
+  department_id  int not null references "department"(department_id),
+  term_id        int not null references "term"(term_id) on delete restrict,
 
-  COURSE_DESCRIPTION       TEXT,
-  PREREQ_TEXT              TEXT,
-  COURSE_LEARNING_OUTCOMES TEXT,
+  course_description       text,
+  prereq_text              text,
+  course_learning_outcomes text,
 
-  EXCLUDES_COURSE_ID          INT REFERENCES "Course"(COURSE_ID),
-  HARD_PREREQUISITE_COURSE_ID INT REFERENCES "Course"(COURSE_ID),
+  excludes_course_id          int references "course"(course_id),
+  hard_prerequisite_course_id int references "course"(course_id),
 
-  CHECK (EXCLUDES_COURSE_ID IS NULL OR EXCLUDES_COURSE_ID <> COURSE_ID),
-  CHECK (HARD_PREREQUISITE_COURSE_ID IS NULL OR HARD_PREREQUISITE_COURSE_ID <> COURSE_ID),
+  check (excludes_course_id is null or excludes_course_id <> course_id),
+  check (hard_prerequisite_course_id is null or hard_prerequisite_course_id <> course_id),
 
-  -- Allow same course code/name in different terms, but prevent duplicates within a term
-  UNIQUE (COURSE_CODE, TERM_ID),
-  UNIQUE (COURSE_NAME, TERM_ID)
+  -- allow same course code/name in different terms, but prevent duplicates within a term
+  unique (course_code, term_id),
+  unique (course_name, term_id)
 );
 
-CREATE INDEX IDX_COURSE_DEPARTMENT ON "Course"(DEPARTMENT_ID);
-CREATE INDEX IDX_COURSE_TERM ON "Course"(TERM_ID);
-CREATE INDEX IDX_STUDENT_PROGRAM ON "Student"(PROGRAM_ID);
+create index idx_course_department on "course"(department_id);
+create index idx_course_term on "course"(term_id);
+create index idx_student_program on "student"(program_id);
 
 
--- Join tables
+-- join tables
 
-CREATE TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" (
-  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
-  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE RESTRICT,
-  PRIMARY KEY (STUDENT_ID, COURSE_ID)
+create table student_requested_enrollment_in_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "STUDENT_ENROLLED_IN_COURSE" (
-  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
-  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE RESTRICT,
-  PRIMARY KEY (STUDENT_ID, COURSE_ID)
+create table student_enrolled_in_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "STUDENT_PASSED_COURSE" (
-  STUDENT_ID INT NOT NULL REFERENCES "Student"(STUDENT_ID) ON DELETE CASCADE,
-  COURSE_ID  INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE RESTRICT,
-  GRADE      VARCHAR(5) NOT NULL,
-  PRIMARY KEY (STUDENT_ID, COURSE_ID)
+create table student_passed_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  grade      varchar(5) not null,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "TEACHING_COURSE" (
-  INSTRUCTOR_ID INT NOT NULL REFERENCES "Instructor"(INSTRUCTOR_ID) ON DELETE CASCADE,
-  COURSE_ID     INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE RESTRICT,
-  PRIMARY KEY (INSTRUCTOR_ID, COURSE_ID)
+create table teaching_course (
+  instructor_id int not null references "instructor"(instructor_id) on delete cascade,
+  course_id     int not null references "course"(course_id) on delete restrict,
+  primary key (instructor_id, course_id)
 );
 
 
-CREATE TABLE "DEPARTMENT_INSTRUCTOR" (
-  DEPARTMENT_ID INT NOT NULL REFERENCES "Department"(DEPARTMENT_ID) ON DELETE CASCADE,
-  INSTRUCTOR_ID INT NOT NULL REFERENCES "Instructor"(INSTRUCTOR_ID) ON DELETE CASCADE,
-  PRIMARY KEY (DEPARTMENT_ID, INSTRUCTOR_ID)
+create table department_instructor (
+  department_id int not null references "department"(department_id) on delete cascade,
+  instructor_id int not null references "instructor"(instructor_id) on delete cascade,
+  primary key (department_id, instructor_id)
 );
 
-CREATE TABLE "PROGRAM_REQUIRED_COURSE" (
-  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
-  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
-  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
-  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
+create table program_required_course (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
 );
 
-CREATE TABLE "PROGRAM_ELECTIVE_COURSE" (
-  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
-  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
-  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
-  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
+create table "program_elective_course" (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
 );
 
-CREATE TABLE "PROGRAM_MANDATORY_ELECTIVE_COURSE" (
-  PROGRAM_ID            INT NOT NULL REFERENCES "Program"(PROGRAM_ID) ON DELETE CASCADE,
-  COURSE_ID             INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
-  AVAILABLE_FROM_YEAR_N INT NOT NULL CHECK (AVAILABLE_FROM_YEAR_N >= 1),
-  PRIMARY KEY (PROGRAM_ID, COURSE_ID)
+create table program_mandatory_elective_course (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
 );
 
--- Class and Lesson
+-- class and lesson
 
-CREATE TABLE "Class" (
-  CLASS_ID   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  CLASS_NAME VARCHAR(200) NOT NULL UNIQUE
+create table class (
+  class_id   int generated always as identity primary key,
+  class_name varchar(200) not null unique
 );
 
-CREATE TABLE "Lesson" (
-  LESSON_ID   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  COURSE_ID   INT NOT NULL REFERENCES "Course"(COURSE_ID) ON DELETE CASCADE,
-  CLASS_ID    INT NOT NULL REFERENCES "Class"(CLASS_ID) ON DELETE CASCADE,
-  LESSON_TYPE VARCHAR(50),
-  LESSON_TIME TIMESTAMP NOT NULL
+create table lesson (
+  lesson_id   int generated always as identity primary key,
+  course_id   int not null references "course"(course_id) on delete cascade,
+  class_id    int not null references "class"(class_id) on delete cascade,
+  lesson_type varchar(50),
+  lesson_time timestamp not null
 );
 
-CREATE INDEX IDX_LESSON_COURSE ON "Lesson"(COURSE_ID);
-COMMIT;
+create index idx_lesson_course on lesson(course_id);
+commit;
