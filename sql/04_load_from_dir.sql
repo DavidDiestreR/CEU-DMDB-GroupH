@@ -40,7 +40,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_department
   \echo 'Loading department...'
-  \copy "Department" FROM 'data/dump_folder/department.csv' WITH (FORMAT csv, HEADER true)
+  \copy department FROM 'data/dump_folder/department.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -50,7 +50,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_instructor
   \echo 'Loading instructor...'
-  \copy "Instructor" FROM 'data/dump_folder/instructor.csv' WITH (FORMAT csv, HEADER true)
+  \copy instructor FROM 'data/dump_folder/instructor.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -60,27 +60,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_program
   \echo 'Loading program...'
-  \copy "Program" FROM 'data/dump_folder/program.csv' WITH (FORMAT csv, HEADER true)
-\endif
-
-\if :is_windows
-  \set has_course `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\course.csv') { 'true' } else { 'false' }"`
-\else
-  \set has_course `sh -c "if [ -f 'data/dump_folder/course.csv' ]; then echo true; else echo false; fi"`
-\endif
-\if :has_course
-  \echo 'Loading course...'
-  \copy "Course" FROM 'data/dump_folder/course.csv' WITH (FORMAT csv, HEADER true)
-\endif
-
-\if :is_windows
-  \set has_student `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\student.csv') { 'true' } else { 'false' }"`
-\else
-  \set has_student `sh -c "if [ -f 'data/dump_folder/student.csv' ]; then echo true; else echo false; fi"`
-\endif
-\if :has_student
-  \echo 'Loading student...'
-  \copy "Student" FROM 'data/dump_folder/student.csv' WITH (FORMAT csv, HEADER true)
+  \copy program FROM 'data/dump_folder/program.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -90,7 +70,27 @@ SET search_path TO :"schema";
 \endif
 \if :has_term
   \echo 'Loading term...'
-  \copy "Term" FROM 'data/dump_folder/term.csv' WITH (FORMAT csv, HEADER true)
+  \copy term FROM 'data/dump_folder/term.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
+  \set has_course `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\course.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_course `sh -c "if [ -f 'data/dump_folder/course.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_course
+  \echo 'Loading course...'
+  \copy course FROM 'data/dump_folder/course.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
+  \set has_student `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\student.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_student `sh -c "if [ -f 'data/dump_folder/student.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_student
+  \echo 'Loading student...'
+  \copy student FROM 'data/dump_folder/student.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -100,7 +100,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_class
   \echo 'Loading class...'
-  \copy "Class" FROM 'data/dump_folder/class.csv' WITH (FORMAT csv, HEADER true)
+  \copy class FROM 'data/dump_folder/class.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 
@@ -112,7 +112,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_department_instructor
   \echo 'Loading department_instructor...'
-  \copy "DEPARTMENT_INSTRUCTOR" FROM 'data/dump_folder/department_instructor.csv' WITH (FORMAT csv, HEADER true)
+  \copy department_instructor FROM 'data/dump_folder/department_instructor.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -122,7 +122,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_teaching_course
   \echo 'Loading teaching_course...'
-  \copy "TEACHING_COURSE" FROM 'data/dump_folder/teaching_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy teaching_course FROM 'data/dump_folder/teaching_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -132,7 +132,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_program_required_course
   \echo 'Loading program_required_course...'
-  \copy "PROGRAM_REQUIRED_COURSE" FROM 'data/dump_folder/program_required_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy program_required_course FROM 'data/dump_folder/program_required_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -142,7 +142,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_program_elective_course
   \echo 'Loading program_elective_course...'
-  \copy "PROGRAM_ELECTIVE_COURSE" FROM 'data/dump_folder/program_elective_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy program_elective_course FROM 'data/dump_folder/program_elective_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -152,7 +152,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_program_mandatory_elective_course
   \echo 'Loading program_mandatory_elective_course...'
-  \copy "PROGRAM_MANDATORY_ELECTIVE_COURSE" FROM 'data/dump_folder/program_mandatory_elective_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy program_mandatory_elective_course FROM 'data/dump_folder/program_mandatory_elective_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -162,7 +162,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_student_requested_enrollment
   \echo 'Loading student_requested_enrollment_in_course...'
-  \copy "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" FROM 'data/dump_folder/student_requested_enrollment_in_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy student_requested_enrollment_in_course FROM 'data/dump_folder/student_requested_enrollment_in_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -172,7 +172,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_student_enrolled
   \echo 'Loading student_enrolled_in_course...'
-  \copy "STUDENT_ENROLLED_IN_COURSE" FROM 'data/dump_folder/student_enrolled_in_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy student_enrolled_in_course FROM 'data/dump_folder/student_enrolled_in_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -182,7 +182,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_student_passed
   \echo 'Loading student_passed_course...'
-  \copy "STUDENT_PASSED_COURSE" FROM 'data/dump_folder/student_passed_course.csv' WITH (FORMAT csv, HEADER true)
+  \copy student_passed_course FROM 'data/dump_folder/student_passed_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -192,7 +192,7 @@ SET search_path TO :"schema";
 \endif
 \if :has_lesson
   \echo 'Loading lesson...'
-  \copy "Lesson" FROM 'data/dump_folder/lesson.csv' WITH (FORMAT csv, HEADER true)
+  \copy lesson FROM 'data/dump_folder/lesson.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \echo
