@@ -1,4 +1,4 @@
-.PHONY: help env schema constraints views deploy load load-truncate reset-drop reset-truncate sanity workflow
+.PHONY: help env hooks schema constraints views deploy load load-truncate reset-drop reset-truncate sanity workflow
 
 ENV_FILE := .env
 
@@ -15,6 +15,7 @@ PSQL_BASE = $(PSQL) -v ON_ERROR_STOP=1 -v schema=$(SCHEMA)
 help:
 	@echo "Targets:"
 	@echo "  env              Copy .env.example to .env"
+	@echo "  hooks            Install repo git hooks (.githooks)"
 	@echo "  schema           Apply sql/01_schema.sql"
 	@echo "  constraints      Apply sql/02_constraints.sql"
 	@echo "  views            Apply sql/03_views.sql"
@@ -33,6 +34,11 @@ $(ENV_FILE): .env.example
 	cp .env.example $(ENV_FILE)
 
 env: $(ENV_FILE)
+
+hooks:
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit || true
+	@echo "Git hooks installed. Current hooksPath: $$(git config --get core.hooksPath)"
 
 schema: $(ENV_FILE)
 	$(PSQL_BASE) -f sql/01_schema.sql "$(CONN)"

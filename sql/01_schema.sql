@@ -1,167 +1,154 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
--- ============================================================
--- 01_schema.sql
--- Creates the Group H schema (tables + PK/FK constraints).
---
--- This script is intended to be executed with psql so that
--- the :schema variable works.
---
--- Usage (recommended):
---   1) Set variables in .env:
---      DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SCHEMA
---   2) Run the make target:
---      make schema
---
--- Notes:
---   - Run sql/00_reset.sql first (mode=drop) if you want a clean rebuild.
--- ============================================================
-
 \if :{?schema}
 \else
-  \set schema sandbox
+  \set schema project
 \endif
 
--- Schema is assumed to exist (no CREATE privilege).
-SET search_path TO :"schema";
+set search_path to :"schema";
 
-BEGIN;
+begin;
 
-CREATE TABLE "Department" (
-  "department_id" serial PRIMARY KEY
+
+-- core tables
+
+create table department (
+  department_id      int generated always as identity primary key,
+  department_name    varchar(200) not null unique
 );
 
-CREATE TABLE "Program" (
-  "program_id" serial PRIMARY KEY,
-  "department_id" int NOT NULL
+create table program (
+  program_id                int generated always as identity primary key,
+  program_name              varchar(200) not null unique,
+  department_id             int not null references "department"(department_id),
+  program_coordinator_email varchar(254),
+  program_learning_outcome  text,
+  program_description       text
 );
 
-CREATE TABLE "Course" (
-  "course_id" serial PRIMARY KEY,
-  "department_id" int NOT NULL,
-  "excludes_course_id" int,
-  "hard_prerequisite_course_id" int
+create table instructor (
+  instructor_id     int generated always as identity primary key,
+  instructor_first_name  varchar(100) not null,
+  instructor_last_name   varchar(100) not null,
+  instructor_email  varchar(254) unique,
+  instructor_office varchar(100)
 );
 
-CREATE TABLE "Student" (
-  "student_id" serial PRIMARY KEY,
-  "program_id" int NOT NULL
+create table student (
+  student_id         int generated always as identity primary key,
+  student_first_name varchar(100) not null,
+  student_last_name  varchar(100) not null,
+  student_email      varchar(254) unique,
+  student_start_year int not null check (student_start_year >= 2020),
+  program_id         int not null references "program"(program_id)
 );
 
-CREATE TABLE "Instructor" (
-  "instructor_id" serial PRIMARY KEY
+create table term (
+  term_id    int generated always as identity primary key,
+  term_name  varchar(100) not null unique,
+  start_date date not null,
+  end_date   date not null,
+  check (end_date > start_date)
 );
 
-CREATE TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE" (
-  "student_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("student_id", "course_id")
+create table course (
+  course_id      int generated always as identity primary key,
+  course_code    varchar(20) not null,
+  course_name    varchar(200) not null,
+  course_credits int not null check (course_credits > 0),
+  department_id  int not null references "department"(department_id),
+  term_id        int not null references "term"(term_id) on delete restrict,
+
+  course_description       text,
+  prereq_text              text,
+  course_learning_outcomes text,
+
+  excludes_course_id          int references "course"(course_id),
+  hard_prerequisite_course_id int references "course"(course_id),
+
+  check (excludes_course_id is null or excludes_course_id <> course_id),
+  check (hard_prerequisite_course_id is null or hard_prerequisite_course_id <> course_id),
+
+  -- allow same course code/name in different terms, but prevent duplicates within a term
+  unique (course_code, term_id),
+  unique (course_name, term_id)
 );
 
-CREATE TABLE "STUDENT_ENROLLED_IN_COURSE" (
-  "student_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("student_id", "course_id")
+create index idx_course_department on "course"(department_id);
+create index idx_course_term on "course"(term_id);
+create index idx_student_program on "student"(program_id);
+
+
+-- join tables
+
+create table student_requested_enrollment_in_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "STUDENT_PASSED_COURSE" (
-  "student_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("student_id", "course_id")
+create table student_enrolled_in_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "TEACHING_COURSE" (
-  "instructor_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("instructor_id", "course_id")
+create table student_passed_course (
+  student_id int not null references "student"(student_id) on delete cascade,
+  course_id  int not null references "course"(course_id) on delete restrict,
+  grade      varchar(5) not null,
+  primary key (student_id, course_id)
 );
 
-CREATE TABLE "DEPARTMENT_INSTRUCTOR" (
-  "department_id" int NOT NULL,
-  "instructor_id" int NOT NULL,
-  PRIMARY KEY ("department_id", "instructor_id")
+create table teaching_course (
+  instructor_id int not null references "instructor"(instructor_id) on delete cascade,
+  course_id     int not null references "course"(course_id) on delete restrict,
+  primary key (instructor_id, course_id)
 );
 
-CREATE TABLE "PROGRAM_REQUIRED_COURSE" (
-  "program_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("program_id", "course_id")
+
+create table department_instructor (
+  department_id int not null references "department"(department_id) on delete cascade,
+  instructor_id int not null references "instructor"(instructor_id) on delete cascade,
+  primary key (department_id, instructor_id)
 );
 
-CREATE TABLE "PROGRAM_ELECTIVE_COURSE" (
-  "program_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("program_id", "course_id")
+create table program_required_course (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
 );
 
-CREATE TABLE "PROGRAM_MANDATORY_ELECTIVE_COURSE" (
-  "program_id" int NOT NULL,
-  "course_id" int NOT NULL,
-  PRIMARY KEY ("program_id", "course_id")
+create table "program_elective_course" (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
 );
 
-ALTER TABLE "Program"
-  ADD FOREIGN KEY ("department_id") REFERENCES "Department" ("department_id");
+create table program_mandatory_elective_course (
+  program_id            int not null references "program"(program_id) on delete cascade,
+  course_id             int not null references "course"(course_id) on delete cascade,
+  available_from_year_n int not null check (available_from_year_n >= 1),
+  primary key (program_id, course_id)
+);
 
-ALTER TABLE "Course"
-  ADD FOREIGN KEY ("department_id") REFERENCES "Department" ("department_id");
+-- class and lesson
 
-ALTER TABLE "Course"
-  ADD FOREIGN KEY ("excludes_course_id") REFERENCES "Course" ("course_id");
+create table class (
+  class_id   int generated always as identity primary key,
+  class_name varchar(200) not null unique
+);
 
-ALTER TABLE "Course"
-  ADD FOREIGN KEY ("hard_prerequisite_course_id") REFERENCES "Course" ("course_id");
+create table lesson (
+  lesson_id   int generated always as identity primary key,
+  course_id   int not null references "course"(course_id) on delete cascade,
+  class_id    int not null references "class"(class_id) on delete cascade,
+  lesson_type varchar(50),
+  lesson_time timestamp not null
+);
 
-ALTER TABLE "Student"
-  ADD FOREIGN KEY ("program_id") REFERENCES "Program" ("program_id");
-
-ALTER TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE"
-  ADD FOREIGN KEY ("student_id") REFERENCES "Student" ("student_id");
-
-ALTER TABLE "STUDENT_REQUESTED_ENROLLMENT_IN_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "STUDENT_ENROLLED_IN_COURSE"
-  ADD FOREIGN KEY ("student_id") REFERENCES "Student" ("student_id");
-
-ALTER TABLE "STUDENT_ENROLLED_IN_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "STUDENT_PASSED_COURSE"
-  ADD FOREIGN KEY ("student_id") REFERENCES "Student" ("student_id");
-
-ALTER TABLE "STUDENT_PASSED_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "TEACHING_COURSE"
-  ADD FOREIGN KEY ("instructor_id") REFERENCES "Instructor" ("instructor_id");
-
-ALTER TABLE "TEACHING_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "DEPARTMENT_INSTRUCTOR"
-  ADD FOREIGN KEY ("department_id") REFERENCES "Department" ("department_id");
-
-ALTER TABLE "DEPARTMENT_INSTRUCTOR"
-  ADD FOREIGN KEY ("instructor_id") REFERENCES "Instructor" ("instructor_id");
-
-ALTER TABLE "PROGRAM_REQUIRED_COURSE"
-  ADD FOREIGN KEY ("program_id") REFERENCES "Program" ("program_id");
-
-ALTER TABLE "PROGRAM_REQUIRED_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "PROGRAM_ELECTIVE_COURSE"
-  ADD FOREIGN KEY ("program_id") REFERENCES "Program" ("program_id");
-
-ALTER TABLE "PROGRAM_ELECTIVE_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-ALTER TABLE "PROGRAM_MANDATORY_ELECTIVE_COURSE"
-  ADD FOREIGN KEY ("program_id") REFERENCES "Program" ("program_id");
-
-ALTER TABLE "PROGRAM_MANDATORY_ELECTIVE_COURSE"
-  ADD FOREIGN KEY ("course_id") REFERENCES "Course" ("course_id");
-
-COMMIT;
+create index idx_lesson_course on lesson(course_id);
+commit;

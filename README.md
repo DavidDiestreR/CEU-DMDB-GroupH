@@ -105,6 +105,16 @@ make env
 
 > It is important **not** to commit `.env` (in principle, .gitignore manages this directly).
 
+### 2.5) Install git hooks (required per clone)
+
+Run once after cloning:
+
+```bash
+make hooks
+```
+
+This sets `core.hooksPath=.githooks` so the notebook-cleaning pre-commit hook runs on macOS/Windows/Linux.
+
 ### 3) Deploy schema + constraints + views
 Run these commands from the repo root. This executes everything on the **remote database you connect to**.
 
@@ -269,4 +279,18 @@ Make equivalent:
 make sanity
 ```
 
+## Notebook hygiene enforcement
+
+To enforce cleared Jupyter notebooks across macOS/Windows/Linux, this repo includes:
+
+- Workflow: `.github/workflows/notebook-hygiene.yml`
+- Checker script: `.githooks/notebook_hygiene.py --check-all`
+
+The check fails if any tracked `.ipynb` file contains:
+
+- Non-empty `outputs`
+- Non-null `execution_count`
+- `metadata.widgets`
+
+For hard enforcement, set `Notebook Hygiene / check-notebooks` as a required status check in your branch protection rule. Local hooks can be skipped, but required CI checks block merges while failing.
 

@@ -1,0 +1,2 @@
+.githooks/pre-commit text eol=lf
+.githooks/*.py text eol=lf

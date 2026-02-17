@@ -1,3 +1,42 @@
 #!/bin/sh
-powershell -NoProfile -ExecutionPolicy Bypass -File ".githooks/pre-commit.ps1"
-exit $?
+
+HOOK_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+HYGIENE_SCRIPT="$HOOK_DIR/notebook_hygiene.py"
+
+run_python_hook() {
+    cmd="$1"
+
+    "$cmd" -c "import json" >/dev/null 2>&1 || return 127
+    "$cmd" "$HYGIENE_SCRIPT" --fix-staged
+    return $?
+}
+
+if command -v python3 >/dev/null 2>&1; then
+    run_python_hook python3
+    rc=$?
+    if [ "$rc" -ne 127 ]; then
+        exit "$rc"
+    fi
+fi
+
+if command -v python >/dev/null 2>&1; then
+    run_python_hook python
+    rc=$?
+    if [ "$rc" -ne 127 ]; then
+        exit "$rc"
+    fi
+fi
+
+# Common absolute python3 locations on macOS when PATH is limited (e.g., GUI Git clients).
+for py in /usr/bin/python3 /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+    if [ -x "$py" ]; then
+        run_python_hook "$py"
+        rc=$?
+        if [ "$rc" -ne 127 ]; then
+            exit "$rc"
+        fi
+    fi
+done
+
+echo "pre-commit: python3 is required to clean staged notebooks." >&2
+exit 1
