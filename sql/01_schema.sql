@@ -3,7 +3,7 @@
 
 \if :{?schema}
 \else
-  \set schema sandbox
+  \set schema project
 \endif
 
 SET search_path TO :"schema";
