@@ -235,6 +235,20 @@ make sanity
 ```
 ---
 
+## Example queries
+
+Run sample reporting and analysis queries:
+
+```bash
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/example_queries.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+```
+
+Make equivalent:
+```bash
+make queries
+```
+---
+
 ## Recommended workflow (end-to-end)
 
 1) (Optional) full reset:
@@ -260,6 +274,7 @@ make deploy
 ```
 
 3) Load data (optional):
+Copy the CSV files you want to load into `data/dump_folder/` first, then run:
 ```bash
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
@@ -269,14 +284,14 @@ Make equivalent:
 make load
 ```
 
-4) Run checks:
+4) Run example queries:
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/example_queries.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
 ```bash
-make sanity
+make queries
 ```
 
 ## Notebook hygiene enforcement
@@ -293,4 +308,3 @@ The check fails if any tracked `.ipynb` file contains:
 - `metadata.widgets`
 
 For hard enforcement, set `Notebook Hygiene / check-notebooks` as a required status check in your branch protection rule. Local hooks can be skipped, but required CI checks block merges while failing.
-

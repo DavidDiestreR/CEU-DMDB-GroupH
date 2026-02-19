@@ -1,4 +1,4 @@
-.PHONY: help env hooks schema constraints views deploy load load-truncate reset-drop reset-truncate sanity workflow
+.PHONY: help env hooks schema constraints views deploy load load-truncate reset-drop reset-truncate sanity queries workflow
 
 ENV_FILE := .env
 
@@ -25,6 +25,7 @@ help:
 	@echo "  reset-drop       Drop + recreate schema (sql/00_reset.sql mode=drop)"
 	@echo "  reset-truncate   Truncate tables (sql/00_reset.sql mode=truncate)"
 	@echo "  sanity           Run sql/queries/sanity_checks.sql"
+	@echo "  queries          Run sql/queries/example_queries.sql"
 	@echo "  workflow         End-to-end recommended workflow"
 	@echo ""
 	@echo "Variables:"
@@ -65,5 +66,8 @@ reset-truncate: $(ENV_FILE)
 
 sanity: $(ENV_FILE)
 	$(PSQL_BASE) -f sql/queries/sanity_checks.sql "$(CONN)"
+
+queries: $(ENV_FILE)
+	$(PSQL_BASE) -f sql/queries/example_queries.sql "$(CONN)"
 
 workflow: reset-drop deploy load sanity

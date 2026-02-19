@@ -1,16 +1,20 @@
+\set ON_ERROR_STOP on
+\pset pager off
+
 -- ============================================================
 -- example_queries.sql
--- Sample queries for the course information system
+-- Sample queries for the course information system.
 --
--- Usage:
---   psql -v schema=project -f sql/queries/example_queries.sql "host=..."
+-- Usage (recommended):
+--   1) Set variables in .env:
+--      DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, SCHEMA
+--   2) Run the make target:
+--      make queries
 -- ============================================================
-
-\pset pager off
 
 \if :{?schema}
 \else
-  \set schema project
+  \set schema sandbox
 \endif
 
 SET search_path TO :"schema";
