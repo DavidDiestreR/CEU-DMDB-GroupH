@@ -24,8 +24,11 @@ The database is designed to support queries such as:
 CEU-DMDB-GroupH/
 ├─ README.md
 ├─ .gitignore
+├─ .gitattributes
 ├─ .env.example
 ├─ Makefile
+├─ .github/
+├─ .githooks/
 ├─ docs/
 │  ├─ week_4_project_proposal/
 │  ├─ week_8_project_prototype/
@@ -39,6 +42,7 @@ CEU-DMDB-GroupH/
 │  └─ queries/
 │     ├─ example_queries.sql
 │     └─ sanity_checks.sql
+├─ data_preprocessing/
 └─ data/
    ├─ public/
    ├─ private/
