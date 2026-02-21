@@ -65,10 +65,8 @@ create table course (
   course_learning_outcomes text,
 
   excludes_course_id          int references course(course_id),
-  hard_prerequisite_course_id int references course(course_id),
 
   check (excludes_course_id is null or excludes_course_id <> course_id),
-  check (hard_prerequisite_course_id is null or hard_prerequisite_course_id <> course_id),
 
   -- allow same course code/name in different terms, but prevent duplicates within a term
   unique (course_code, term_id),
@@ -105,6 +103,13 @@ create table teaching_course (
   instructor_id int not null references instructor(instructor_id) on delete cascade,
   course_id     int not null references course(course_id) on delete restrict,
   primary key (instructor_id, course_id)
+);
+
+create table course_has_hard_prerequisite_course (
+  course_id                   int not null references course(course_id) on delete cascade,
+  hard_prerequisite_course_id int not null references course(course_id) on delete cascade,
+  primary key (course_id, hard_prerequisite_course_id),
+  check (course_id <> hard_prerequisite_course_id)
 );
 
 

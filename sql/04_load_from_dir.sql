@@ -84,6 +84,16 @@ SET search_path TO :"schema";
 \endif
 
 \if :is_windows
+  \set has_course_has_hard_prerequisite_course `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\course_has_hard_prerequisite_course.csv') { 'true' } else { 'false' }"`
+\else
+  \set has_course_has_hard_prerequisite_course `sh -c "if [ -f 'data/dump_folder/course_has_hard_prerequisite_course.csv' ]; then echo true; else echo false; fi"`
+\endif
+\if :has_course_has_hard_prerequisite_course
+  \echo 'Loading course_has_hard_prerequisite_course...'
+  \copy course_has_hard_prerequisite_course FROM 'data/dump_folder/course_has_hard_prerequisite_course.csv' WITH (FORMAT csv, HEADER true)
+\endif
+
+\if :is_windows
   \set has_student `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\student.csv') { 'true' } else { 'false' }"`
 \else
   \set has_student `sh -c "if [ -f 'data/dump_folder/student.csv' ]; then echo true; else echo false; fi"`

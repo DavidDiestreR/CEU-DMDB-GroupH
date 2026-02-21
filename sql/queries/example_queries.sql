@@ -83,30 +83,42 @@ ORDER BY course_type, course_code;
 -- ============================================================
 -- QUERY 2: Prerequisite check for enrollment requests
 --
--- For each pending request, checks whether the hard prerequisite
--- (if any) has been passed and labels the request accordingly.
+-- For each pending request, checks whether all hard prerequisites
+-- (if any) have been passed and labels the request accordingly.
 -- ============================================================
 
 SELECT s.student_first_name || ' ' || s.student_last_name AS student_name,
        c.course_code,
        c.course_name,
-       prereq.course_name  AS hard_prerequisite,
+       COALESCE(
+         STRING_AGG(prereq.course_name, ', ' ORDER BY prereq.course_name),
+         'None'
+       ) AS hard_prerequisites,
        c.prereq_text       AS soft_prerequisites,
        CASE
-           WHEN c.hard_prerequisite_course_id IS NULL
+           WHEN COUNT(chpc.hard_prerequisite_course_id) = 0
                 THEN 'AUTO-APPROVE'
-           WHEN c.hard_prerequisite_course_id IS NOT NULL
-                AND EXISTS (SELECT 1
-                            FROM student_passed_course spc
-                            WHERE spc.student_id = req.student_id
-                              AND spc.course_id  = c.hard_prerequisite_course_id)
+           WHEN COUNT(spc.course_id) = COUNT(chpc.hard_prerequisite_course_id)
                 THEN 'AUTO-APPROVE'
-           ELSE 'FLAG: prerequisite not met'
+           ELSE 'FLAG: prerequisites not met'
        END AS decision
 FROM student_requested_enrollment_in_course req
 JOIN student s      ON req.student_id = s.student_id
 JOIN course  c      ON req.course_id  = c.course_id
-LEFT JOIN course prereq ON c.hard_prerequisite_course_id = prereq.course_id
+LEFT JOIN course_has_hard_prerequisite_course chpc
+       ON chpc.course_id = c.course_id
+LEFT JOIN course prereq
+       ON prereq.course_id = chpc.hard_prerequisite_course_id
+LEFT JOIN student_passed_course spc
+       ON spc.student_id = req.student_id
+      AND spc.course_id  = chpc.hard_prerequisite_course_id
+GROUP BY req.student_id,
+         req.course_id,
+         s.student_first_name,
+         s.student_last_name,
+         c.course_code,
+         c.course_name,
+         c.prereq_text
 ORDER BY decision, s.student_last_name;
 
 
