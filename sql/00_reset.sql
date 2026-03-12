@@ -55,7 +55,7 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
   DROP TABLE IF EXISTS
     :"schema".program_mandatory_elective_course,
     :"schema".program_elective_course,
-    :"schema".program_required_course,
+    :"schema".program_mandatory_course,
     :"schema".course_has_hard_prerequisite_course,
     :"schema".department_instructor,
     :"schema".teaching_course,
@@ -86,7 +86,7 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
   TRUNCATE TABLE
     :"schema".program_mandatory_elective_course,
     :"schema".program_elective_course,
-    :"schema".program_required_course,
+    :"schema".program_mandatory_course,
     :"schema".course_has_hard_prerequisite_course,
     :"schema".department_instructor,
     :"schema".teaching_course,
@@ -110,3 +110,4 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
 
 \echo ERROR: Unknown mode value. Use -v mode=drop or -v mode=truncate
 \quit
+

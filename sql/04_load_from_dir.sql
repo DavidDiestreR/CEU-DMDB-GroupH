@@ -136,13 +136,13 @@ SET search_path TO :"schema";
 \endif
 
 \if :is_windows
-  \set has_program_required_course `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\program_required_course.csv') { 'true' } else { 'false' }"`
+  \set has_program_mandatory_course `powershell -NoProfile -Command "if (Test-Path 'data\\dump_folder\\program_mandatory_course.csv') { 'true' } else { 'false' }"`
 \else
-  \set has_program_required_course `sh -c "if [ -f 'data/dump_folder/program_required_course.csv' ]; then echo true; else echo false; fi"`
+  \set has_program_mandatory_course `sh -c "if [ -f 'data/dump_folder/program_mandatory_course.csv' ]; then echo true; else echo false; fi"`
 \endif
-\if :has_program_required_course
-  \echo 'Loading program_required_course...'
-  \copy program_required_course FROM 'data/dump_folder/program_required_course.csv' WITH (FORMAT csv, HEADER true)
+\if :has_program_mandatory_course
+  \echo 'Loading program_mandatory_course...'
+  \copy program_mandatory_course FROM 'data/dump_folder/program_mandatory_course.csv' WITH (FORMAT csv, HEADER true)
 \endif
 
 \if :is_windows
@@ -207,3 +207,4 @@ SET search_path TO :"schema";
 
 \echo
 \echo 'Done. Files that exist were loaded, missing files were skipped.'
+

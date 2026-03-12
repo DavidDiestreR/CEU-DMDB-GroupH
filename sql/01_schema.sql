@@ -19,20 +19,21 @@ create table department (
 );
 
 create table program (
-  program_id                int generated always as identity primary key,
-  program_name              varchar(200) not null unique,
-  department_id             int not null references department(department_id),
-  program_coordinator_email varchar(254),
-  program_learning_outcome  text,
-  program_description       text
+  program_id                     int generated always as identity primary key,
+  program_name                   varchar(200) not null unique,
+  department_id                  int not null references department(department_id),
+  corresponding_program_codes    varchar(20) not null,
+  program_coordinator_email      varchar(254),
+  program_learning_outcome       text,
+  program_description            text
 );
 
 create table instructor (
-  instructor_id     int generated always as identity primary key,
+  instructor_id          int generated always as identity primary key,
   instructor_first_name  varchar(100) not null,
   instructor_last_name   varchar(100) not null,
-  instructor_email  varchar(254) unique,
-  instructor_office varchar(100)
+  instructor_email       varchar(254) unique,
+  instructor_office      varchar(100)
 );
 
 create table student (
@@ -46,17 +47,22 @@ create table student (
 
 create table term (
   term_id    int generated always as identity primary key,
-  term_name  varchar(100) not null unique,
+  term_name  varchar(100) not null,
+  level      varchar(50) not null,
   start_date date not null,
   end_date   date not null,
-  check (end_date > start_date)
+  check (end_date > start_date),
+
+  -- allow same term name in different levels to include different timeframes, but prevent duplicates within a level
+  unique (term_name, level)
 );
 
 create table course (
   course_id      int generated always as identity primary key,
   course_code    varchar(20) not null,
   course_name    varchar(200) not null,
-  course_credits int not null check (course_credits > 0),
+  us_credits     int not null check (us_credits > 0),
+  ects_credits   int not null check (ects_credits > 0),
   department_id  int not null references department(department_id),
   term_id        int not null references term(term_id) on delete restrict,
 
@@ -65,6 +71,20 @@ create table course (
   course_learning_outcomes text,
 
   excludes_course_id          int references course(course_id),
+
+  level                                 varchar(50) not null,
+  abbreviation                          varchar(8),
+  course_type                           varchar(20),
+  marking_scheme                        varchar(100),
+  offered_for_non_degree_students       boolean not null default false,
+  allow_repeats                         boolean not null default false,
+  scheme                                varchar(100),
+
+  learning_activities_and_teaching_methods  text,
+  assessment                                text,
+  course_contents                           text,
+  background_and_overall_aim                text,
+  contact_details                           text,
 
   check (excludes_course_id is null or excludes_course_id <> course_id),
 
@@ -119,7 +139,7 @@ create table department_instructor (
   primary key (department_id, instructor_id)
 );
 
-create table program_required_course (
+create table program_mandatory_course (
   program_id            int not null references program(program_id) on delete cascade,
   course_id             int not null references course(course_id) on delete cascade,
   available_from_year_n int not null check (available_from_year_n >= 1),
@@ -157,3 +177,5 @@ create table lesson (
 
 create index idx_lesson_course on lesson(course_id);
 commit;
+
+

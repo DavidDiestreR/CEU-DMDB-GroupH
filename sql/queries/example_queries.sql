@@ -35,7 +35,7 @@ SELECT c.course_code,
        'Required' AS course_type,
        prc.available_from_year_n
 FROM student s
-JOIN program_required_course prc ON s.program_id = prc.program_id
+JOIN program_mandatory_course prc ON s.program_id = prc.program_id
 JOIN course c                    ON prc.course_id = c.course_id
 JOIN term t                      ON c.term_id = t.term_id
 WHERE s.student_id = 2
@@ -139,7 +139,7 @@ SELECT s.student_first_name || ' ' || s.student_last_name AS student_name,
                     FILTER (WHERE spc.student_id IS NOT NULL), 0) AS remaining_mandatory
 FROM student s
 JOIN program p                    ON s.program_id  = p.program_id
-JOIN program_required_course prc  ON p.program_id  = prc.program_id
+JOIN program_mandatory_course prc  ON p.program_id  = prc.program_id
 JOIN course c                     ON prc.course_id = c.course_id
 LEFT JOIN student_passed_course spc
        ON spc.student_id = s.student_id
