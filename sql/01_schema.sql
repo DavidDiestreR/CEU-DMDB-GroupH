@@ -175,7 +175,6 @@ create table lesson (
   lesson_time timestamp not null
 );
 
-create index idx_lesson_course on lesson(course_id);
 commit;
 
 

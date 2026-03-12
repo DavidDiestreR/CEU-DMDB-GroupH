@@ -1,8 +1,8 @@
-# CEU-DMDB-GroupH
+﻿# CEU-DMDB-GroupH
 
 DNDS5020 - Data Management and Databases (CEU)
 
-**Project summary:** This repository contains Group H’s PostgreSQL implementation of a unified CEU course information system. It includes the database schema (entities, attributes, relationships), sample/public datasets, and a set of views and loading scripts to make setup and testing reproducible across environments.
+**Project summary:** This repository contains Group H's PostgreSQL implementation of a unified CEU course information system. It includes the database schema (entities, attributes, relationships), sample/public datasets, and a set of views and loading scripts to make setup and testing reproducible across environments.
 
 ---
 
@@ -36,12 +36,10 @@ CEU-DMDB-GroupH/
 ├─ sql/
 │  ├─ 00_reset.sql
 │  ├─ 01_schema.sql
-│  ├─ 02_constraints.sql
+│  ├─ 02_load.sql
 │  ├─ 03_views.sql
-│  ├─ 04_load_from_dir.sql
 │  └─ queries/
-│     ├─ example_queries.sql
-│     └─ sanity_checks.sql
+│     └─ example_queries.sql
 ├─ data_preprocessing/
 └─ data/
    ├─ public/
@@ -58,17 +56,17 @@ CEU-DMDB-GroupH/
 
 ## Database overview
 
-Core entities:
+Core tables:
 
-- Departments, Programs, Courses, Students, Instructors
+- `department`, `program`, `instructor`, `student`, `term`, `course`, `class`, `lesson`
 
 Relationship / junction tables:
 
-- TEACHING_COURSE: links instructors to courses
-- DEPARTMENT INSTRUCTOR: associates instructors with departments the tables
-- STUDENT REQUESTED ENROLLMENT IN COURSE (pending requests), STUDENT ENROLLED IN COURSE
-(enrollment), and STUDENT PASSED COURSE (completed courses): key tables for different stages of the student-course interaction
-- PROGRAM REQUIRED COURSE, PROGRAM ELECTIVE COURSE, and PROGRAM MANDATORY ELECTIVE COURSE: capture different types of degree requirements.
+- `teaching_course`: links instructors to courses
+- `department_instructor`: associates instructors with departments
+- `student_requested_enrollment_in_course`, `student_enrolled_in_course`, `student_passed_course`: represent requested, active, and completed student-course relationships
+- `course_has_hard_prerequisite_course`: stores hard prerequisite dependencies between courses
+- `program_mandatory_course`, `program_elective_course`, `program_mandatory_elective_course`: capture the different ways courses belong to program requirements
 
 ---
 
@@ -119,22 +117,18 @@ make hooks
 
 This sets `core.hooksPath=.githooks` so the notebook-cleaning pre-commit hook runs on macOS/Windows/Linux.
 
-### 3) Deploy schema + constraints + views
+### 3) Deploy schema + views
 Run these commands from the repo root. This executes everything on the **remote database you connect to**.
 
 ```bash
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalents:
 ```bash
 make schema
-make constraints
 make views
-
-make deploy # does all three in order
 ```
 
 **Why the flags?**
@@ -142,7 +136,7 @@ make deploy # does all three in order
 - `-v ON_ERROR_STOP=1`: stops immediately if anything fails, preventing partial setup.
 
 **Note on permissions**
-- This project assumes the target schema already exists. If you do not have `CREATE` on the database, ask the admin/instructor to create the schema and grant you `USAGE, CREATE` on it.
+- This project assumes the target schema already exists.
 
 ---
 
@@ -151,17 +145,9 @@ make deploy # does all three in order
 During development/testing, scripts will often be re-run. To make this safe:
 
 - **Views** should be defined with `CREATE OR REPLACE VIEW` in `sql/03_views.sql`.  
-  This allows re-running the file without “already exists” errors and keeps definitions up to date.  
+  This allows re-running the file without "already exists" errors and keeps definitions up to date.  
   Note: removing a view from the file does not delete it from the database; use `sql/00_reset.sql` (mode=drop) for a clean rebuild.
 
-- **Extra constraints** (beyond PKs/FKs already in the schema) should be added in an idempotent way in `sql/02_constraints.sql`.  
-  PostgreSQL does not provide a general `ADD CONSTRAINT IF NOT EXISTS`, so we use:
-
-  - explicitly named constraints (important), plus
-  - a `DO $$ ... EXCEPTION duplicate_object ... $$;` block to ignore duplicates on re-run.
-
-  If existing data violates a new constraint, adding it will fail (intended).  
-  If you change the logic of an existing constraint, you must drop it first (or rebuild from scratch).
 
 - **Indexes** should use `CREATE INDEX IF NOT EXISTS ...` for idempotency.
 
@@ -169,7 +155,7 @@ During development/testing, scripts will often be re-run. To make this safe:
 
 ## Loading data (directory-based loader)
 
-`sql/04_load_from_dir.sql` is a simple loader designed to:
+`sql/02_load.sql` is a simple loader designed to:
 - load CSVs from `data/dump_folder/`
 - load only those tables (skipping missing ones)
 
@@ -177,7 +163,7 @@ Place your CSVs in `data/dump_folder/` before running `make load`.
 
 ### Example (load from dump folder)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/02_load.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -187,7 +173,7 @@ make load
 
 ### Re-load from scratch (truncate first)
 ```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v truncate=1 -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v truncate=1 -f sql/02_load.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
 
 Make equivalent:
@@ -203,7 +189,7 @@ make load-truncate
 
 `sql/00_reset.sql` provides a safe reset for development/testing without dropping the whole database.
 
-### Full reset (drop schema + recreate)
+### Full reset (drop schema)
 ```bash
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
@@ -213,7 +199,7 @@ Make equivalent:
 make reset-drop
 ```
 
-### Data-only reset (truncate tables, keep schema/objects)
+### Data-only reset (drop data, keep schema/objects)
 ```bash
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=truncate -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
 ```
@@ -225,23 +211,9 @@ make reset-truncate
 
 ---
 
-## Sanity checks
-
-After deploying schema and loading data:
-
-```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/sanity_checks.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-```
-
-Make equivalent:
-```bash
-make sanity
-```
----
-
 ## Example queries
 
-Run sample reporting and analysis queries:
+Run premade queries:
 
 ```bash
 psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/example_queries.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
@@ -252,63 +224,14 @@ Make equivalent:
 make queries
 ```
 ---
-
-## Recommended workflow (end-to-end)
-
-1) (Optional) full reset:
-```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=drop -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-```
-
-Make equivalent:
-```bash
-make reset-drop
-```
-
-2) Deploy schema + constraints + views:
-```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/01_schema.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/02_constraints.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/03_views.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-```
-
-Make equivalent:
-```bash
-make deploy
-```
-
-3) Load data (optional):
-Copy the CSV files you want to load into `data/dump_folder/` first, then run:
-```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/04_load_from_dir.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-```
-
-Make equivalent:
-```bash
-make load
-```
-
-4) Run example queries:
-```bash
-psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -f sql/queries/example_queries.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
-```
-
-Make equivalent:
-```bash
-make queries
-```
 
 ## Notebook hygiene enforcement
 
 To enforce cleared Jupyter notebooks across macOS/Windows/Linux, this repo includes:
-
 - Workflow: `.github/workflows/notebook-hygiene.yml`
 - Checker script: `.githooks/notebook_hygiene.py --check-all`
 
 The check fails if any tracked `.ipynb` file contains:
-
 - Non-empty `outputs`
 - Non-null `execution_count`
 - `metadata.widgets`
-
-For hard enforcement, set `Notebook Hygiene / check-notebooks` as a required status check in your branch protection rule. Local hooks can be skipped, but required CI checks block merges while failing.

@@ -1,9 +1,0 @@
--- Add non-PK/FK constraints here (CHECK/UNIQUE/extra FKs) in an idempotent way.
--- Postgres does not support `ADD CONSTRAINT IF NOT EXISTS`, so we use a DO-block that:
---   (1) adds a named constraint, and
---   (2) ignores `duplicate_object` if it already exists.
--- This allows safe re-execution during development/testing.
--- Important:
---   - Always name constraints explicitly (otherwise idempotency is unreliable).
---   - If existing data violates a new constraint, the script will fail (intended).
---   - If a constraint definition changes, drop it first (or reset/rebuild) before re-adding.

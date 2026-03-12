@@ -1,5 +1,5 @@
 -- ============================================================
--- 04_load_from_dir.sql
+-- 02_load.sql
 -- Simple CSV loader - loads from hardcoded data directory
 --
 -- Usage (recommended):
@@ -207,4 +207,5 @@ SET search_path TO :"schema";
 
 \echo
 \echo 'Done. Files that exist were loaded, missing files were skipped.'
+
 

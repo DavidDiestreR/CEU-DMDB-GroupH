@@ -31,3 +31,6 @@ data/.DS_Store
 jupyter_notebooks/data_cleaning_2.ipynb
 jupyter_notebooks/data_cleaning_improved.ipynb
 jupyter_notebooks/~$cleaned_data.xlsx
+
+# Private data file
+data_preprocessing/for_looking.txt

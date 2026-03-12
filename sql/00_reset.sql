@@ -16,12 +16,11 @@
 --      make reset-drop        # or: make reset-truncate
 --
 -- Modes:
---   mode=drop     : DROP SCHEMA CASCADE + recreate the schema (removes tables, views, etc.)
---   mode=truncate : TRUNCATE all known tables (keeps schema + objects, clears data)
+--   mode=drop     : DROP SCHEMA CASCADE (removes tables, views, etc.)
+--   mode=truncate : TRUNCATE all known tables (clears data)
 --
 -- Notes:
---   - The schema is assumed to already exist unless you have CREATE privileges.
---   - You may need privileges to drop/recreate a schema on the CEU server.
+--   - The schema is assumed to already exist.
 --   - If you only have rights to modify data, use mode=truncate.
 -- ============================================================
 
@@ -48,7 +47,7 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
 \gset
 
 -- ------------------------------------------------------------
--- mode = drop  (drop all project tables, keep schema)
+-- mode = drop  (drop all project tables)
 -- ------------------------------------------------------------
 \if :is_drop
   \echo Dropping all project tables in schema :schema (CASCADE)...
@@ -76,7 +75,7 @@ SELECT (:'mode' = 'drop')::int AS is_drop,
 \endif
 
 -- ------------------------------------------------------------
--- mode = truncate (clear data, keep schema)
+-- mode = truncate (clear data, keep tables)
 -- ------------------------------------------------------------
 \if :is_truncate
   \echo Truncating tables in schema :schema (CASCADE)...
