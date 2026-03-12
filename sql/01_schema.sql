@@ -22,7 +22,7 @@ create table program (
   program_id                     int generated always as identity primary key,
   program_name                   varchar(200) not null unique,
   department_id                  int not null references department(department_id),
-  corresponding_program_codes    varchar(20) not null,
+  corresponding_program_codes    varchar(50) not null,
   program_coordinator_email      varchar(254),
   program_learning_outcome       text,
   program_description            text

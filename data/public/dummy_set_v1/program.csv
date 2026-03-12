@@ -1,5 +1,5 @@
-program_id,program_name,department_id,program_coordinator_email,program_learning_outcome,program_description
-1,BSc Computer Science,1,cs-coord@ceu.edu,Build solid software systems,Core software engineering program
-2,MSc Data Science,2,ds-coord@ceu.edu,Model data and communicate insights,Advanced analytics and ML
-3,BSc Business Analytics,3,ba-coord@ceu.edu,Use data for business decisions,Business + analytics foundations
-4,MSc Applied AI,2,ai-coord@ceu.edu,Design production AI workflows,Applied machine learning and deployment
+program_id,program_name,department_id,corresponding_program_codes,program_coordinator_email,program_learning_outcome,program_description
+1,BSc Computer Science,1,BCSCOMP,cs-coord@ceu.edu,Build solid software systems and reason about computing problems.,Core software engineering program with programming systems and databases.
+2,MSc Data Science,2,MSCDATS,ds-coord@ceu.edu,Model data and communicate statistical and machine learning insights.,Advanced analytics and machine learning program focused on practical data work.
+3,BSc Business Analytics,3,BABANAL,ba-coord@ceu.edu,Use data for business decisions and communicate operational insights.,Business plus analytics foundations with reporting decision support and visualization.
+4,MSc Applied AI,2,MSCAPAI,ai-coord@ceu.edu,Design production AI workflows and evaluate deployed intelligent systems.,Applied machine learning and AI deployment program with hands-on systems focus.

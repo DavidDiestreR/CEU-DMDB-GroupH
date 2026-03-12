@@ -30,7 +30,7 @@ SET search_path TO :"schema";
 
 SELECT c.course_code,
        c.course_name,
-       c.course_credits,
+       c.ects_credits,
        t.term_name,
        'Required' AS course_type,
        prc.available_from_year_n
@@ -47,7 +47,7 @@ UNION ALL
 
 SELECT c.course_code,
        c.course_name,
-       c.course_credits,
+       c.ects_credits,
        t.term_name,
        'Elective' AS course_type,
        pec.available_from_year_n
@@ -64,7 +64,7 @@ UNION ALL
 
 SELECT c.course_code,
        c.course_name,
-       c.course_credits,
+       c.ects_credits,
        t.term_name,
        'Mandatory Elective' AS course_type,
        pmec.available_from_year_n
@@ -125,17 +125,17 @@ ORDER BY decision, s.student_last_name;
 -- ============================================================
 -- QUERY 3: Credit progress per student
 --
--- For each student shows total mandatory credits required by
+-- For each student shows total mandatory ECTS credits required by
 -- their program, how many they have passed, and the remainder.
 -- ============================================================
 
 SELECT s.student_first_name || ' ' || s.student_last_name AS student_name,
        p.program_name,
-       SUM(c.course_credits)                               AS total_mandatory_credits,
-       COALESCE(SUM(c.course_credits)
-                FILTER (WHERE spc.student_id IS NOT NULL), 0) AS passed_mandatory_credits,
-       SUM(c.course_credits)
-         - COALESCE(SUM(c.course_credits)
+       SUM(c.ects_credits)                               AS total_mandatory_ects_credits,
+       COALESCE(SUM(c.ects_credits)
+                FILTER (WHERE spc.student_id IS NOT NULL), 0) AS passed_mandatory_ects_credits,
+       SUM(c.ects_credits)
+         - COALESCE(SUM(c.ects_credits)
                     FILTER (WHERE spc.student_id IS NOT NULL), 0) AS remaining_mandatory
 FROM student s
 JOIN program p                    ON s.program_id  = p.program_id
