@@ -146,3 +146,163 @@ LEFT JOIN student_passed_course spc
       AND spc.course_id  = prc.course_id
 GROUP BY s.student_id, s.student_first_name, s.student_last_name, p.program_name
 ORDER BY student_name;
+
+
+-- ============================================================
+-- QUERY 4: Class rescheduling
+--
+-- For a target course, returns the common free time windows shared by
+-- all enrolled students between 08:20 and 19:20, Monday to Friday.
+-- The target course is only used to choose which students to inspect.
+-- Its own lessons are also treated as occupied time, so those slots
+-- never appear as free results.
+--
+-- Change the course_id in params to test a different course.
+-- Lessons are modeled as recurring weekly slots.
+-- ============================================================
+
+WITH params AS (
+  SELECT 1::int AS course_id
+),
+weekday_order AS (
+  SELECT *
+  FROM (VALUES
+    (1, 'monday'),
+    (2, 'tuesday'),
+    (3, 'wednesday'),
+    (4, 'thursday'),
+    (5, 'friday')
+  ) AS t(weekday_number, weekday)
+),
+course_students AS (
+  SELECT sec.student_id
+  FROM student_enrolled_in_course sec
+  JOIN params p ON p.course_id = sec.course_id
+),
+occupied_lessons AS (
+  SELECT DISTINCT
+         wo.weekday_number,
+         wo.weekday,
+         GREATEST(l.start_time, TIME '08:20') AS busy_start,
+         LEAST(l.end_time, TIME '19:20') AS busy_end
+  FROM course_students cs
+  JOIN student_enrolled_in_course sec
+    ON sec.student_id = cs.student_id
+  JOIN lesson l
+    ON l.course_id = sec.course_id
+  JOIN weekday_order wo
+    ON wo.weekday = lower(l.weekday)
+  WHERE l.end_time > TIME '08:20'
+    AND l.start_time < TIME '19:20'
+),
+normalized_lessons AS (
+  SELECT weekday_number,
+         weekday,
+         busy_start,
+         busy_end
+  FROM occupied_lessons
+  WHERE busy_start < busy_end
+),
+running_busy AS (
+  SELECT weekday_number,
+         weekday,
+         busy_start,
+         busy_end,
+         MAX(busy_end) OVER (
+           PARTITION BY weekday_number
+           ORDER BY busy_start, busy_end
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+         ) AS running_busy_end
+  FROM normalized_lessons
+),
+busy_groups AS (
+  SELECT weekday_number,
+         weekday,
+         busy_start,
+         busy_end,
+         SUM(
+           CASE
+             WHEN previous_running_busy_end IS NULL
+                  OR busy_start > previous_running_busy_end THEN 1
+             ELSE 0
+           END
+         ) OVER (
+           PARTITION BY weekday_number
+           ORDER BY busy_start, busy_end
+         ) AS group_id
+  FROM (
+    SELECT weekday_number,
+           weekday,
+           busy_start,
+           busy_end,
+           LAG(running_busy_end) OVER (
+             PARTITION BY weekday_number
+             ORDER BY busy_start, busy_end
+           ) AS previous_running_busy_end
+    FROM running_busy
+  ) x
+),
+merged_busy AS (
+  SELECT weekday_number,
+         weekday,
+         MIN(busy_start) AS busy_start,
+         MAX(busy_end) AS busy_end
+  FROM busy_groups
+  GROUP BY weekday_number, weekday, group_id
+),
+day_bounds AS (
+  SELECT weekday_number,
+         weekday,
+         TIME '08:20' AS day_start,
+         TIME '19:20' AS day_end
+  FROM weekday_order
+),
+busy_with_sentinel AS (
+  SELECT weekday_number,
+         weekday,
+         busy_start,
+         busy_end
+  FROM merged_busy
+
+  UNION ALL
+
+  SELECT weekday_number,
+         weekday,
+         day_end AS busy_start,
+         day_end AS busy_end
+  FROM day_bounds
+),
+free_slots AS (
+  SELECT bws.weekday_number,
+         INITCAP(bws.weekday) AS weekday,
+         COALESCE(
+           LAG(bws.busy_end) OVER (
+             PARTITION BY bws.weekday_number
+             ORDER BY bws.busy_start, bws.busy_end
+           ),
+           db.day_start
+         ) AS free_start,
+         bws.busy_start AS free_end
+  FROM busy_with_sentinel bws
+  JOIN day_bounds db
+    ON db.weekday_number = bws.weekday_number
+)
+SELECT fs.weekday,
+       fs.free_start,
+       fs.free_end,
+       fs.free_end - fs.free_start AS free_duration,
+       (
+         SELECT STRING_AGG(c.class_name, ', ' ORDER BY c.class_name)
+         FROM class c
+         WHERE NOT EXISTS (
+           SELECT 1
+           FROM lesson l
+           WHERE l.class_id = c.class_id
+             AND lower(l.weekday) = lower(fs.weekday)
+             AND l.start_time < fs.free_end
+             AND l.end_time > fs.free_start
+         )
+       ) AS rooms_available
+FROM free_slots fs
+WHERE fs.free_start < fs.free_end
+ORDER BY fs.weekday_number, fs.free_start;
