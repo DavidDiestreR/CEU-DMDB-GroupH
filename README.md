@@ -22,29 +22,29 @@ The database is designed to support queries such as:
 
 ```
 CEU-DMDB-GroupH/
-+- README.md
-+- .gitignore
-+- .gitattributes
-+- .env.example
-+- Makefile
-+- .github/
-+- .githooks/
-+- docs/
-�  +- week_4_project_proposal/
-�  +- week_8_project_prototype/
-�  +- week_12_project_presentation/
-+- sql/
-�  +- 00_reset.sql
-�  +- 01_schema.sql
-�  +- 02_load.sql
-�  +- 03_views.sql
-�  +- queries/
-�     +- example_queries.sql
-+- data_preprocessing/
-+- data/
-   +- public/
-   +- private/
-   +- dump_folder/
+├─ README.md
+├─ .gitignore
+├─ .gitattributes
+├─ .env.example
+├─ Makefile
+├─ .github/
+├─ .githooks/
+├─ docs/
+│  ├─ week_4_project_proposal/
+│  ├─ week_8_project_prototype/
+│  └─ week_12_project_presentation/
+├─ sql/
+│  ├─ 00_reset.sql
+│  ├─ 01_schema.sql
+│  ├─ 02_load.sql
+│  ├─ 03_views.sql
+│  └─ queries/
+│     └─ example_queries.sql
+├─ data_preprocessing/
+└─ data/
+   ├─ public/
+   ├─ private/
+   └─ dump_folder/
 ```
 
 ### Notes
@@ -233,3 +233,4 @@ The check fails if any tracked `.ipynb` file contains:
 - Non-empty `outputs`
 - Non-null `execution_count`
 - `metadata.widgets`
+
