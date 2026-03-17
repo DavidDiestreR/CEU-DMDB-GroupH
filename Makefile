@@ -1,4 +1,4 @@
-.PHONY: help env hooks schema views load load-truncate reset-drop reset-truncate queries
+.PHONY: help env hooks schema views load load-truncate reset-drop reset-truncate reset-view queries
 
 ENV_FILE := .env
 
@@ -22,6 +22,7 @@ help:
 	@echo "  load-truncate    Truncate then load data"
 	@echo "  reset-drop       Drop + recreate schema (sql/00_reset.sql mode=drop)"
 	@echo "  reset-truncate   Truncate tables (sql/00_reset.sql mode=truncate)"
+	@echo "  reset-view       Drop project materialized views only (sql/00_reset.sql mode=reset-view)"
 	@echo "  queries          Run sql/queries/example_queries.sql"
 	@echo ""
 	@echo "Variables:"
@@ -54,6 +55,9 @@ reset-drop: $(ENV_FILE)
 
 reset-truncate: $(ENV_FILE)
 	$(PSQL_BASE) -v mode=truncate -f sql/00_reset.sql "$(CONN)"
+
+reset-view: $(ENV_FILE)
+	$(PSQL_BASE) -v mode=reset-view -f sql/00_reset.sql "$(CONN)"
 
 queries: $(ENV_FILE)
 	$(PSQL_BASE) -f sql/queries/example_queries.sql "$(CONN)"

@@ -1,4 +1,4 @@
-﻿# CEU-DMDB-GroupH
+# CEU-DMDB-GroupH
 
 DNDS5020 - Data Management and Databases (CEU)
 
@@ -22,29 +22,29 @@ The database is designed to support queries such as:
 
 ```
 CEU-DMDB-GroupH/
-├─ README.md
-├─ .gitignore
-├─ .gitattributes
-├─ .env.example
-├─ Makefile
-├─ .github/
-├─ .githooks/
-├─ docs/
-│  ├─ week_4_project_proposal/
-│  ├─ week_8_project_prototype/
-│  └─ week_12_project_presentation/
-├─ sql/
-│  ├─ 00_reset.sql
-│  ├─ 01_schema.sql
-│  ├─ 02_load.sql
-│  ├─ 03_views.sql
-│  └─ queries/
-│     └─ example_queries.sql
-├─ data_preprocessing/
-└─ data/
-   ├─ public/
-   ├─ private/
-   └─ dump_folder/
++- README.md
++- .gitignore
++- .gitattributes
++- .env.example
++- Makefile
++- .github/
++- .githooks/
++- docs/
+�  +- week_4_project_proposal/
+�  +- week_8_project_prototype/
+�  +- week_12_project_presentation/
++- sql/
+�  +- 00_reset.sql
+�  +- 01_schema.sql
+�  +- 02_load.sql
+�  +- 03_views.sql
+�  +- queries/
+�     +- example_queries.sql
++- data_preprocessing/
++- data/
+   +- public/
+   +- private/
+   +- dump_folder/
 ```
 
 ### Notes
@@ -140,18 +140,6 @@ make views
 
 ---
 
-## Idempotency (safe re-execution)
-
-During development/testing, scripts will often be re-run. To make this safe:
-
-- **Views** should be defined with `CREATE OR REPLACE VIEW` in `sql/03_views.sql`.  
-  This allows re-running the file without "already exists" errors and keeps definitions up to date.  
-  Note: removing a view from the file does not delete it from the database; use `sql/00_reset.sql` (mode=drop) for a clean rebuild.
-
-
-- **Indexes** should use `CREATE INDEX IF NOT EXISTS ...` for idempotency.
-
----
 
 ## Loading data (directory-based loader)
 
@@ -207,6 +195,16 @@ psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=truncate -f sql/00_reset.sql "
 Make equivalent:
 ```bash
 make reset-truncate
+```
+
+### Views-only reset (drop materialized views, keep tables and data)
+```bash
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=reset-view -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+```
+
+Make equivalent:
+```bash
+make reset-view
 ```
 
 ---

@@ -25,6 +25,7 @@ SET search_path TO :"schema";
 --
 -- Shows courses from the student's program (required, elective,
 -- mandatory-elective) that the student has not yet passed,
+-- Change the student_id in the WHERE clauses to inspect a different student.
 -- is not currently enrolled in, and whose year gate they meet.
 -- ============================================================
 
