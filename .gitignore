@@ -34,3 +34,4 @@ jupyter_notebooks/~$cleaned_data.xlsx
 
 # Private data file
 data_preprocessing/for_looking.txt
+data/public/real_data/
