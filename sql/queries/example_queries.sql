@@ -162,9 +162,11 @@ ORDER BY student_name;
 -- ============================================================
 
 WITH params AS (
+  -- Input parameter: target course whose enrolled students we inspect.
   SELECT 1::int AS course_id
 ),
 weekday_order AS (
+  -- Static weekday lookup used to enforce Monday-to-Friday ordering.
   SELECT *
   FROM (VALUES
     (1, 'monday'),
@@ -175,11 +177,13 @@ weekday_order AS (
   ) AS t(weekday_number, weekday)
 ),
 course_students AS (
+  -- Students enrolled in the target course.
   SELECT sec.student_id
   FROM student_enrolled_in_course sec
   JOIN params p ON p.course_id = sec.course_id
 ),
 occupied_lessons AS (
+  -- Busy intervals for those students, clipped to the daily scheduling window.
   SELECT DISTINCT
          wo.weekday_number,
          wo.weekday,
@@ -194,16 +198,10 @@ occupied_lessons AS (
     ON wo.weekday = lower(l.weekday)
   WHERE l.end_time > TIME '08:20'
     AND l.start_time < TIME '19:20'
-),
-normalized_lessons AS (
-  SELECT weekday_number,
-         weekday,
-         busy_start,
-         busy_end
-  FROM occupied_lessons
-  WHERE busy_start < busy_end
+    AND GREATEST(l.start_time, TIME '08:20') < LEAST(l.end_time, TIME '19:20')
 ),
 running_busy AS (
+  -- For each row, keep the latest end time reached by its overlapping busy intervals on that day.
   SELECT weekday_number,
          weekday,
          busy_start,
@@ -213,9 +211,10 @@ running_busy AS (
            ORDER BY busy_start, busy_end
            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
          ) AS running_busy_end
-  FROM normalized_lessons
+  FROM occupied_lessons
 ),
 busy_groups AS (
+  -- Number the busy intervals so overlapping or touching rows end up in the same group.
   SELECT weekday_number,
          weekday,
          busy_start,
@@ -243,6 +242,7 @@ busy_groups AS (
   ) x
 ),
 merged_busy AS (
+  -- Merge each busy group into a single occupied interval.
   SELECT weekday_number,
          weekday,
          MIN(busy_start) AS busy_start,
@@ -251,6 +251,7 @@ merged_busy AS (
   GROUP BY weekday_number, weekday, group_id
 ),
 day_bounds AS (
+  -- Daily boundaries for the search window on each weekday.
   SELECT weekday_number,
          weekday,
          TIME '08:20' AS day_start,
@@ -258,6 +259,7 @@ day_bounds AS (
   FROM weekday_order
 ),
 busy_with_sentinel AS (
+  -- Add a day-end sentinel so the last free slot of each day can be computed.
   SELECT weekday_number,
          weekday,
          busy_start,
@@ -273,8 +275,9 @@ busy_with_sentinel AS (
   FROM day_bounds
 ),
 free_slots AS (
+  -- Compute gaps between merged busy intervals as candidate free slots.
   SELECT bws.weekday_number,
-         INITCAP(bws.weekday) AS weekday,
+         bws.weekday AS weekday,
          COALESCE(
            LAG(bws.busy_end) OVER (
              PARTITION BY bws.weekday_number
