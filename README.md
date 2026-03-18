@@ -1,4 +1,4 @@
-﻿# CEU-DMDB-GroupH
+# CEU-DMDB-GroupH
 
 DNDS5020 - Data Management and Databases (CEU)
 
@@ -140,18 +140,6 @@ make views
 
 ---
 
-## Idempotency (safe re-execution)
-
-During development/testing, scripts will often be re-run. To make this safe:
-
-- **Views** should be defined with `CREATE OR REPLACE VIEW` in `sql/03_views.sql`.  
-  This allows re-running the file without "already exists" errors and keeps definitions up to date.  
-  Note: removing a view from the file does not delete it from the database; use `sql/00_reset.sql` (mode=drop) for a clean rebuild.
-
-
-- **Indexes** should use `CREATE INDEX IF NOT EXISTS ...` for idempotency.
-
----
 
 ## Loading data (directory-based loader)
 
@@ -209,6 +197,16 @@ Make equivalent:
 make reset-truncate
 ```
 
+### Views-only reset (drop materialized views, keep tables and data)
+```bash
+psql -v ON_ERROR_STOP=1 -v schema=$SCHEMA -v mode=reset-view -f sql/00_reset.sql "host=$DB_HOST port=$DB_PORT dbname=$DB_NAME user=$DB_USER password=$DB_PASSWORD"
+```
+
+Make equivalent:
+```bash
+make reset-view
+```
+
 ---
 
 ## Example queries
@@ -235,3 +233,4 @@ The check fails if any tracked `.ipynb` file contains:
 - Non-empty `outputs`
 - Non-null `execution_count`
 - `metadata.widgets`
+

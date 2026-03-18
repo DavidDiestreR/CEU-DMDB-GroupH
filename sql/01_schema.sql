@@ -172,9 +172,11 @@ create table lesson (
   course_id   int not null references course(course_id) on delete cascade,
   class_id    int not null references class(class_id) on delete cascade,
   lesson_type varchar(50),
-  lesson_time timestamp not null
+  weekday     varchar(10) not null,
+  start_time  time not null,
+  end_time    time not null,
+  check (lower(weekday) in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday')),
+  check (end_time > start_time)
 );
 
 commit;
-
-

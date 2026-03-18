@@ -1,9 +1,10 @@
-lesson_id,course_id,class_id,lesson_type,lesson_time
-1,1,1,lecture,2025-09-03 09:00:00
-2,2,1,lecture,2025-09-04 11:00:00
-3,3,2,lecture,2025-09-05 10:00:00
-4,4,3,lab,2026-02-10 14:00:00
-5,5,3,lab,2026-02-11 16:00:00
-6,6,2,seminar,2026-02-12 13:00:00
-7,7,4,project,2026-06-15 10:00:00
-8,8,4,lecture,2026-06-16 12:00:00
+lesson_id,course_id,class_id,lesson_type,weekday,start_time,end_time
+1,1,1,lecture,wednesday,09:00:00,10:00:00
+2,2,1,lecture,thursday,11:00:00,12:00:00
+3,3,2,lecture,friday,10:00:00,11:00:00
+4,4,3,lab,tuesday,14:00:00,15:00:00
+5,4,3,lecture,tuesday,16:00:00,17:00:00
+6,5,3,lab,wednesday,16:00:00,17:00:00
+7,6,2,seminar,thursday,13:00:00,14:00:00
+8,7,4,project,monday,10:00:00,11:00:00
+9,8,4,lecture,tuesday,12:00:00,13:00:00
