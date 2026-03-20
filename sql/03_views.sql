@@ -59,7 +59,7 @@ from (
   join course c on c.course_id = sec.course_id
   join lesson l on l.course_id = c.course_id
   join class cl on cl.class_id = l.class_id
-  where s.student_id = 201
+  where s.student_id = 2
 ) timetable_rows
 order by weekday_number,
          start_time,
