@@ -61,8 +61,8 @@ create table course (
   course_id      int generated always as identity primary key,
   course_code    varchar(20) not null,
   course_name    varchar(200) not null,
-  us_credits     int not null check (us_credits > 0),
-  ects_credits   int not null check (ects_credits > 0),
+  us_credits     int not null check (us_credits >= 0),
+  ects_credits   int not null check (ects_credits >= 0),
   department_id  int not null references department(department_id),
   term_id        int not null references term(term_id) on delete restrict,
 

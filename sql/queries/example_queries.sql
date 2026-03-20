@@ -120,14 +120,16 @@ GROUP BY req.student_id,
          c.course_code,
          c.course_name,
          c.prereq_text
-ORDER BY decision, s.student_last_name;
+ORDER BY decision, s.student_last_name
+LIMIT 5;
 
 
 -- ============================================================
--- QUERY 3: Credit progress per student
+-- QUERY 3: Credit progress for one student
 --
--- For each student shows total mandatory ECTS credits required by
+-- For one student shows total mandatory ECTS credits required by
 -- their program, how many they have passed, and the remainder.
+-- Change the student_id in the WHERE clause to inspect a different student.
 -- ============================================================
 
 SELECT s.student_first_name || ' ' || s.student_last_name AS student_name,
@@ -145,8 +147,8 @@ JOIN course c                     ON prc.course_id = c.course_id
 LEFT JOIN student_passed_course spc
        ON spc.student_id = s.student_id
       AND spc.course_id  = prc.course_id
-GROUP BY s.student_id, s.student_first_name, s.student_last_name, p.program_name
-ORDER BY student_name;
+WHERE s.student_id = 2
+GROUP BY s.student_id, s.student_first_name, s.student_last_name, p.program_name;
 
 
 -- ============================================================
