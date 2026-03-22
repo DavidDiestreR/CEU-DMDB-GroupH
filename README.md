@@ -22,13 +22,12 @@ The database is designed to support queries such as:
 
 ```
 CEU-DMDB-GroupH/
-├─ README.md
-├─ .gitignore
 ├─ .gitattributes
+├─ .githooks/
+├─ .github/workflows/
+├─ .gitignore
 ├─ .env.example
 ├─ Makefile
-├─ .github/
-├─ .githooks/
 ├─ docs/
 │  ├─ week_4_project_proposal/
 │  ├─ week_8_project_prototype/
