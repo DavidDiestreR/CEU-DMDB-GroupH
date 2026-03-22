@@ -94,12 +94,12 @@ SELECT s.student_first_name || ' ' || s.student_last_name AS student_name,
        COALESCE(
          STRING_AGG(prereq.course_name, ', ' ORDER BY prereq.course_name),
          'None'
-       ) AS hard_prerequisites,
+       ) AS hard_prerequisites, --self join on course to get hard prereqs
        c.prereq_text       AS soft_prerequisites,
        CASE
            WHEN COUNT(chpc.hard_prerequisite_course_id) = 0
                 THEN 'AUTO-APPROVE'
-           WHEN COUNT(spc.course_id) = COUNT(chpc.hard_prerequisite_course_id)
+           WHEN COUNT(spc.course_id)+COUNT(seic.course_id) = COUNT(chpc.hard_prerequisite_course_id)
                 THEN 'AUTO-APPROVE'
            ELSE 'FLAG: prerequisites not met'
        END AS decision
@@ -113,13 +113,18 @@ LEFT JOIN course prereq
 LEFT JOIN student_passed_course spc
        ON spc.student_id = req.student_id
       AND spc.course_id  = chpc.hard_prerequisite_course_id
+LEFT JOIN student_enrolled_in_course seic
+       ON seic.student_id = req.student_id
+      AND seic.course_id  = chpc.hard_prerequisite_course_id
 GROUP BY req.student_id,
          req.course_id,
+         s.student_id,
          s.student_first_name,
          s.student_last_name,
          c.course_code,
          c.course_name,
          c.prereq_text
+HAVING s.student_id > 200
 ORDER BY decision, s.student_last_name
 LIMIT 5;
 
