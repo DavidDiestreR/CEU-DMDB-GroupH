@@ -2,7 +2,7 @@
 
 DNDS5020 - Data Management and Databases (CEU)
 
-**Project summary:** This repository contains Group H's PostgreSQL implementation of a unified CEU course information system. It includes the database schema (entities, attributes, relationships), sample/public datasets, and a set of views and loading scripts to make setup and testing reproducible across environments.
+**Project summary:** This repository contains Group H's PostgreSQL implementation of a unified CEU course information system. It includes the database schema (entities, attributes, relationships), and a set of views and loading scripts to make setup and testing reproducible across environments.
 
 ---
 
@@ -15,6 +15,7 @@ The database is designed to support queries such as:
 - An administrator identifying scheduling conflicts for courses required by the same cohort.
 - A faculty member viewing their consolidated teaching schedule and room assignments.
 - A student comparing course descriptions, instructors, and credits from a single source.
+- A teacher rescheduling a class by identifying common free time windows for enrolled students and available rooms.
 
 ---
 
@@ -232,4 +233,5 @@ The check fails if any tracked `.ipynb` file contains:
 - Non-empty `outputs`
 - Non-null `execution_count`
 - `metadata.widgets`
+
 
